@@ -24,7 +24,7 @@ COURSES = {
     "pc-hardware": {
         "title": "PC Hardware Technician",
         "certificate": "Technical Support Engineer",
-        "description": "Learn the fundamentals of PC hardware, including components, assembly, troubleshooting, and maintenance.",
+        "description": "This is a 3-credit course exploring the fundamental components and concepts around the personal computer (PC), including hardware components, networking devices, memory, bootup issues, operating system components, storage, wireless connectivity, security and troubleshooting exercises. As a final exam, students will take the TestOut PC Pro Certification exam to receive an important industry certification.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT102 PC Hardware Technician",
         "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgBJ4I2SAS8mTKvJkgPxsLSxAWQIt5Dcvj7yeDLKbM806jw?e=BxTziD"
@@ -32,7 +32,7 @@ COURSES = {
     "networking-fundamentals": {
         "title": "Networking Fundamentals",
         "certificate": "Technical Support Engineer",
-        "description": "Introduction to networking concepts, protocols, and network infrastructure basics.",
+        "description": "This is a 3-credit course that explores different hardware technology required to create a simple network including cabling, routers and switches. It explores the different layers of the OSI model using packet capture technology to read and analyze network traffic. Using several hands-on projects, the course focuses on subnetting and how to identify network IDs, broadcast addresses, as well as how to troubleshoot basic networking problems.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT255 Networking Fundamentals",
         "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgCcpZTs2DfEQq-U3GqvZQghAReSYi_TGOtGwIr-AzdsKSI?e=y8NghJ"
@@ -40,7 +40,7 @@ COURSES = {
     "cloud-server": {
         "title": "Cloud Server Administration",
         "certificate": "Technical Support Engineer",
-        "description": "Learn to administer cloud-based servers and cloud infrastructure platforms.",
+        "description": "This is a 3-credit course introducing critical concepts of server technology, including installation, configuration, maintenance, and troubleshooting. Successful completion of this course will prepare students to take the MS AZ-800 certification exam.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT235 - Cloud server administration",
         "onedrive_link": ""  # Add your OneDrive share link here
@@ -48,7 +48,7 @@ COURSES = {
     "intro-it": {
         "title": "Introduction to Information Technology",
         "certificate": "Technical Support Engineer",
-        "description": "Foundational concepts in Information Technology and the IT industry.",
+        "description": "This is a 3-credit course focused on installing, configuring and administering Windows Desktop systems across peer-to-peer configurations as well as client-server domain environments. It develops the skills required to be a consultant, full-time desktop support technician, or IT generalist who administers Windows-based computers and devices as part of broader technical responsibilities.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT125 Intro to Information Technology",
         "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgBvS-sSsknIT7HYo82_wUM3AWQeBr-IgWkN6aFSLJvAgnQ?e=HQBiMx"
@@ -56,7 +56,7 @@ COURSES = {
     "applied-programming": {
         "title": "Foundations of Applied Programming",
         "certificate": "Technical Support Engineer",
-        "description": "Introduction to programming fundamentals and software development principles, with Python as the main language.",
+        "description": "This is a 3-credit introductory course in programming using the Python programming language. Students learn programming from the perspective of a Junior Developer, covering scripting concepts such as variables, operators, input/output, conditional logic, loops, functions, strings, arrays, and files. The course develops problem-solving techniques and computational thinking skills to solve basic operations problems, including creating functions as part of an API, calling APIs, and interacting with databases. Students will also program a Raspberry Pi (virtual or physical) with sensors.",
         "url": "https://www.byupathway.edu",
         "local_folder": "CS104 Foundations of Applied Programming",
         "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgCKPC7nHTdzR7HjE7DKILvjAaqeCiO75vZojPBQkm2qTUI?e=kuNrwn"
@@ -64,7 +64,7 @@ COURSES = {
     "database-design": {
         "title": "Database Design and Analysis",
         "certificate": "IT Professional",
-        "description": "Learn database design principles, SQL, and data management.",
+        "description": "This is a 3-credit course where students use Structured Query Language (SQL) to analyze, design, and build database objects and structures for efficient data retrieval. These technical skills are enhanced with soft skills needed to identify project requirements, communicate roadblocks, and present professional summaries that provide timely solutions for stakeholders.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT 143 Database Design and Analysis",
         "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byuppathway_edu/IgCswwNvuCkzTKtS9dd3at0eAbvqlJxYWSsV0gXTPo37jLw?e=Kin9Bt"
@@ -72,7 +72,7 @@ COURSES = {
     "linux-fundamentals": {
         "title": "Linux Fundamentals",
         "certificate": "IT Professional",
-        "description": "Master Linux operating system basics, commands, and system administration.",
+        "description": "This is a 3-credit course introducing critical concepts of Linux administration, including installation, configuration, management, maintenance, monitoring, security, and troubleshooting. Successful completion prepares students to take the CompTIA Linux+ Certification Exam. It is highly recommended that students have some IT background or have completed IT 125 before taking this course.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT210 Linux Fundamentals",
         "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgDO7_2OGwHdT4AE1LKJwsZKAXfPNe7Iia1X1O6aF3LaWK8?e=LaidyB"
@@ -80,7 +80,7 @@ COURSES = {
     "cloud-computing": {
         "title": "Cloud Computing Essentials",
         "certificate": "IT Professional",
-        "description": "Core concepts of cloud computing, deployment models, and cloud services.",
+        "description": "This is a 3-credit course immersing students in what cloud computing is and how cloud services differ from hosted services. Students identify cloud service models using aaS terminology and explain how they relate to one another. The course covers business drivers for cloud computing, such as reduced costs and increased efficiency, and explores cloud infrastructure planning, adoption strategies, and cloud security models using NIST standards and common risk mitigation.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT 160 Cloud Computing Essentials",
         "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgBdYk-rqyVWRoxBxn3QkSe8ASeqIPGKTn7aunzxw6IRobw?e=dRUJtm"
@@ -88,7 +88,7 @@ COURSES = {
     "network-config": {
         "title": "Network Configuration & Design",
         "certificate": "IT Professional",
-        "description": "Network design, configuration, and best practices for enterprise networks.",
+        "description": "This is a 3-credit course exploring the infrastructure of a large network, including hardware and design strategies. Using virtual and simulation technologies, students configure routers, switches, and learn how to design and secure networks.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT 350 Network Configuration & Design",
         "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgDe-H6FSybYRY7ZSASunPGnAV-HzZ1AA2RfXrN83thrJcg?e=yg1Fe5"
@@ -96,7 +96,7 @@ COURSES = {
     "cybersecurity-foundations": {
         "title": "Cybersecurity Foundations",
         "certificate": "IT Professional",
-        "description": "Introduction to cybersecurity principles, threats, and defense mechanisms.",
+        "description": "This is a 3-credit hands-on course exploring basic cybersecurity concepts including access control management in both Windows AD and Linux environments. It covers security policies, perimeter, network, host, and application defenses, and includes labs with Kali Linux and IDS systems.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT 312 Cybersecurity",
         "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgDuJxwBOzdVQLmc7F2ik_8qAWfFsr_rPVC-jzyRsPTMBQc?e=DcBF87"
@@ -104,7 +104,7 @@ COURSES = {
     "business-intelligence": {
         "title": "Business Intelligence Systems",
         "certificate": "System Administration",
-        "description": "Learn to work with BI tools, data analytics, and business intelligence platforms.",
+        "description": "This is a 3-credit course focused on extracting business intelligence from data sets for reporting and visual analytics across domains such as web analytics and business analytics. It provides hands-on experience with BI software for reporting, visualization, and dashboards to support decision-making.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT 340 Business Intelligence Systems",
         "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgBx73_z5374T4NCwCjIfDUbAV1AqkiURxqSgcuv2UVjkos?e=1i0DKB"
@@ -112,7 +112,7 @@ COURSES = {
     "advanced-linux": {
         "title": "Advanced Linux",
         "certificate": "System Administration",
-        "description": "Advanced Linux system administration, scripting, and performance tuning.",
+        "description": "This is a 3-credit course in which students enhance their foundational Linux skills through experiential projects, interact with advanced Linux command stacks, build and integrate server configurations, and implement business infrastructure plans for secure environments. Students also engage in team collaboration and student-led teaching to experience the life of a Linux administrator.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT 370 Advanced Linux",
         "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgBbUVpk1e3tRYhHHvJlM3C1AUYMZLzHptx1ATb5wmqtqeY?e=SxJZ7a"
