@@ -178,6 +178,17 @@ a {
     margin: 28px 0;
 }
 
+.diagram-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.diagram-link:hover .diagram-node {
+    transform: translateY(-2px);
+    box-shadow: 0 24px 55px rgba(15, 23, 42, 0.12);
+}
+
 .diagram-node {
     background: white;
     border: 1px solid #dbeafe;
@@ -185,6 +196,7 @@ a {
     box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
     padding: 24px;
     position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .diagram-node h3 {
