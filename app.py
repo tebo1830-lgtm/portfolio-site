@@ -220,7 +220,10 @@ def course_detail(course_id):
 def projects():
 
     courses_by_name = {}
-    source_roots = [ONEDRIVE_BASE_PATH]
+    source_roots = [
+        ONEDRIVE_BASE_PATH,
+        os.path.join(app.root_path, 'static', 'projects')
+    ]
 
     def collect_files_from_folder(folder_path):
         files = []
@@ -327,7 +330,25 @@ def projects():
                     "type": file.split('.')[-1].lower() if '.' in file else "other"
                 })
 
-    return render_template("projects.html", courses=list(courses_by_name.values()), recordings_by_course=recordings_by_course)
+    project_links = []
+    for course in COURSES.values():
+        if course.get('onedrive_link'):
+            project_links.append({
+                "title": course['title'],
+                "display": course.get('local_folder', course['title']),
+                "url": course['onedrive_link'],
+                "description": course.get('description', ''),
+                "certificate": course.get('certificate', '')
+            })
+
+    no_files = len(courses_by_name) == 0
+    return render_template(
+        "projects.html",
+        courses=list(courses_by_name.values()),
+        recordings_by_course=recordings_by_course,
+        project_links=project_links,
+        no_files=no_files
+    )
 
 
 # ---------------- RUN ----------------
