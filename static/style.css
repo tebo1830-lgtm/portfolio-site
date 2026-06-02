@@ -100,6 +100,22 @@ a {
     border-left: 4px solid #1e40af;
 }
 
+.byu-employer {
+    border: 1px solid #cfe0f6;
+    background: #f8fbff;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.byu-employer h2 {
+    color: #1e3a8a;
+}
+
+.byu-employer p {
+    color: #334155;
+    margin-bottom: 12px;
+}
+
 tr th, tr td {
     border: 1px solid #e6e6e6;
 }
