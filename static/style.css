@@ -1,5 +1,11 @@
 
-body { font-family: Arial; background:#f4f6f8; margin:0; }
+body { font-family: Arial, sans-serif; background:#f4f6f8; margin:0; }
+body.home-theme { background:#f1f5fb; }
+body.home-theme nav { background:#002d72; }
+body.home-theme nav a { color:#ffffff; }
+body.home-theme .container { padding:30px 20px; }
+body.home-theme .home-card { border: 1px solid #cfe0f6; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+body.home-theme .btn { background:#1e40af; }
 nav { background:#1f2937; padding:15px; }
 nav a { color:white; margin:10px; text-decoration:none; }
 .container { padding:20px; }
