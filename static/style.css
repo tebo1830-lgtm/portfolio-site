@@ -171,6 +171,96 @@ a {
     margin-bottom: 12px;
 }
 
+.certification-diagram {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 20px;
+    margin: 28px 0;
+}
+
+.diagram-node {
+    background: white;
+    border: 1px solid #dbeafe;
+    border-radius: 18px;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+    padding: 24px;
+    position: relative;
+}
+
+.diagram-node h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: #1e3a8a;
+}
+
+.diagram-icon {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e0f2fe;
+    color: #1e40af;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    margin-bottom: 18px;
+}
+
+.diagram-status {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.diagram-status.completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.diagram-status.progress {
+    background: #dbeafe;
+    color: #1e3a8a;
+}
+
+.diagram-status.degree {
+    background: #fde68a;
+    color: #78350f;
+}
+
+.diagram-footer {
+    display: grid;
+    place-items: center;
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.diagram-connector {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 30px;
+    background: #cbd5e1;
+}
+
+.diagram-bottom {
+    width: min(100%, 500px);
+}
+
+@media (max-width: 900px) {
+    .certification-diagram {
+        grid-template-columns: 1fr;
+    }
+
+    .diagram-footer {
+        margin-top: 12px;
+    }
+}
+
 tr th, tr td {
     border: 1px solid #e6e6e6;
 }
