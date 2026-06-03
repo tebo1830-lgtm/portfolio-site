@@ -69,7 +69,7 @@ COURSES = {
         "description": "This is a 3-credit course where students use Structured Query Language (SQL) to analyze, design, and build database objects and structures for efficient data retrieval. These technical skills are enhanced with soft skills needed to identify project requirements, communicate roadblocks, and present professional summaries that provide timely solutions for stakeholders.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT 143 Database Design and Analysis",
-        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byuppathway_edu/IgCswwNvuCkzTKtS9dd3at0eAbvqlJxYWSsV0gXTPo37jLw?e=Kin9Bt"
+        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgCswwNvuCkzTKtS9dd3at0eAbvqlJxYWSsV0gXTPo37jLw?e=dBBULa"
     },
     "linux-fundamentals": {
         "title": "Linux Fundamentals",
