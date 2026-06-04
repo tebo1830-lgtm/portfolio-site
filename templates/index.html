@@ -1,11 +1,41 @@
 {% extends "base.html" %}
+
 {% block content %}
 
 <div class="card">
-<h1>Sifiso Mokhele</h1>
-<p><strong>Technical Support Consultant | IT Support Specialist</strong></p>
-<p>18+ years experience in IT support, ERP systems, service delivery and team management.</p>
 
+  <div class="home-profile">
+
+    <img src="{{ url_for('static', filename='images/Sifiso.jpeg') }}" 
+         alt="Profile Photo" class="profile-img">
+
+    <div class="home-text">
+
+      <h1>👋 Hi, I’m Sifiso Mokhele</h1>
+
+      <p>
+        Welcome to my portfolio site. This platform showcases my professional experience,
+        technical skills, and learning journey in Information Technology.
+      </p>
+
+      <p>
+        With over 18 years of experience in IT support and systems, I am currently
+        pursuing a Bachelor of Applied Science in Information Technology through
+        BYU Pathway Worldwide.
+      </p>
+
+      <p>
+        This site highlights my growth in cybersecurity, cloud computing, and data
+        analytics through real-world projects and hands-on practice.
+      </p>
+
+      <a href="/cybersecurity" class="btn">
+        🔐 View Cybersecurity Project
+      </a>
+
+    </div>
+
+  </div>
 
 </div>
 

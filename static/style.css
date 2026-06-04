@@ -374,3 +374,20 @@ nav a.active {
     margin-bottom: 20px;
     color: #1f2937;  /* dark text for contrast */
 }
+
+.home-profile {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.profile-img {
+    width: 180px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.home-text {
+    flex: 1;
+}
