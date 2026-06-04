@@ -391,3 +391,15 @@ nav a.active {
 .home-text {
     flex: 1;
 }
+
+.contact-box {
+    background: #ffffff;
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-top: 12px;
+    border-left: 4px solid #2B5C8A;
+}
+
+.contact-box p {
+    margin: 0;
+}
