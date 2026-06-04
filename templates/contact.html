@@ -1,48 +1,68 @@
 {% extends "base.html" %}
+
 {% block content %}
 
 <div class="card">
-<h1>Contact</h1>
-<p><strong>Email:</strong> <a href="mailto:tebza27@gmail.com">tebza27@gmail.com</a></p>
-<p><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/sifiso-mokhele-ba176b1b" target="_blank" rel="noopener">linkedin.com/in/sifiso-mokhele-ba176b1b</a></p>
 
-<form method="post" class="contact-form">
-    <label for="name">Name</label>
-    <input id="name" name="name" type="text" placeholder="Your name" />
+  <h1>📬 Contact Me</h1>
 
-    <label for="email">Email</label>
-    <input id="email" name="email" type="email" placeholder="Your email" />
+  <p>
+    I am always open to discussing opportunities, collaborating on projects,
+    or connecting with professionals in the IT and cybersecurity space.
+  </p>
 
-    <label for="message">Message</label>
-    <textarea id="message" name="message" rows="5" placeholder="Type your message here..."></textarea>
+  <h2>🌐 Professional Profile</h2>
+  <p>
+    🔗 <strong>LinkedIn:</strong>
+    <a href="https://www.linkedin.com/in/sifiso-mokhele-ba176b1b/" target="_blank">
+      View my LinkedIn Profile
+    </a>
+  </p>
 
-    <label for="channel">Send via</label>
-    <select id="channel" name="channel">
-        <option value="WhatsApp">WhatsApp</option>
-        <option value="Google Hangouts">Google Hangouts</option>
-        <option value="Email">Email</option>
-    </select>
+  <h2>📞 Contact Channels</h2>
 
-    <button class="btn" type="submit">Send Message</button>
-</form>
+  <div class="contact-box">
+    <p>📧 <strong>Email:</strong> smokhele@byupathway.edu</p>
+  </div>
 
-{% if confirmation %}
-<div class="chat-box {% if sent %}chat-success{% else %}chat-error{% endif %}">
-    <p><strong>Status:</strong> {{ confirmation }}</p>
-    {% if sent and chat_message %}
-    <div class="chat-entry">
-        <p><strong>You:</strong> {{ chat_message.message }}</p>
-        <p><em>Sent via:</em> {{ chat_message.channel }}</p>
-    </div>
-    {% endif %}
+  <div class="contact-box">
+    <div class="contact-box">
+  <p>
+    📱 <strong>Phone:</strong> 064 937 3653
+  </p>
 </div>
-{% endif %}
 
-<div style="margin-top:20px;">
-    <a class="btn" href="https://wa.me/27795510741" target="_blank" rel="noopener">Contact via WhatsApp</a>
-    <a class="btn" href="mailto:tebza27@gmail.com">Email Me</a>
-    <a class="btn" href="https://hangouts.google.com/chat/person/tebza27@gmail.com" target="_blank" rel="noopener">Google Hangouts</a>
+<div class="contact-box">
+  <p>
+    💬 <strong>WhatsApp:</strong>
+    <a href="https://wa.me/27795510741" target="_blank">
+      Message me on WhatsApp
+    </a>
+  </p>
 </div>
+  </div>
+
+  <div class="contact-box">
+    <p>💬 <strong>Google Chat / Hangouts:</strong> tebza27@gmail.com</p>
+  </div>
+
+  <h2>💡 Availability</h2>
+  <p>
+    I am available for:
+  </p>
+
+  <ul>
+    <li>Technical support and IT roles</li>
+    <li>Cybersecurity and cloud computing opportunities</li>
+    <li>Collaborative projects and learning</li>
+  </ul>
+
+  <h2>🧭 Next Steps</h2>
+  <p>
+    Feel free to reach out through any of the channels above.
+    I will respond as soon as possible.
+  </p>
+
 </div>
 
 {% endblock %}

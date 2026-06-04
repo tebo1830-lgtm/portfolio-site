@@ -1,13 +1,42 @@
 {% extends "base.html" %}
-{% block body_class %}home-theme{% endblock %}
+
 {% block content %}
 
-<div class="card home-card">
-<h1>Sifiso Mokhele</h1>
-<p><strong>IT Support & Systems Professional</strong></p>
-<p>18+ years of experience in technical support, ERP systems, and service delivery leadership.</p>
-<p>Currently pursuing a Bachelor of Applied Science in Information Technology through BYU Pathway Worldwide.
-Completed the Technical Support Engineering certificate and progressing toward the IT Professional certification.</p>
+<div class="card">
+
+  <div class="home-profile">
+
+    <img src="{{ url_for('static', filename='images/Sifiso.jpeg') }}" 
+         alt="Profile Photo" class="profile-img">
+
+    <div class="home-text">
+
+      <h1>👋 Hi, I’m Sifiso Mokhele</h1>
+
+      <p>
+        Welcome to my portfolio site. This platform showcases my professional experience,
+        technical skills, and learning journey in Information Technology.
+      </p>
+
+      <p>
+        With over 18 years of experience in IT support and systems, I am currently
+        pursuing a Bachelor of Applied Science in Information Technology through
+        BYU Pathway Worldwide.
+      </p>
+
+      <p>
+        This site highlights my growth in cybersecurity, cloud computing, and data
+        analytics through real-world projects and hands-on practice.
+      </p>
+
+      <a href="/cybersecurity" class="btn">
+        🔐 View Cybersecurity Project
+      </a>
+
+    </div>
+
+  </div>
+
 </div>
 
 {% endblock %}

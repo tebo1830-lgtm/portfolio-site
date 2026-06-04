@@ -5,7 +5,7 @@ Requires environment variables to be set for API credentials.
 
 import os
 import requests
-from twilio.rest import Client
+# from twilio.rest import Client
 
 
 class MessagingService:
@@ -78,4 +78,4 @@ class MessagingService:
 
 def get_messaging_service():
     """Factory function to get messaging service instance."""
-    return MessagingService()
+    print("Messaging disabled")

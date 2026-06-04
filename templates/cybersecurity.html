@@ -2,8 +2,61 @@
 {% block content %}
 
 <div class="card">
-<h1>Cybersecurity</h1>
-<p>Security fundamentals and risk awareness</p>
+
+  <h1>🔐 Cybersecurity Operations Dashboard</h1>
+
+  <p>
+    This project demonstrates a complete penetration testing workflow conducted 
+    in a controlled virtual lab using Kali Linux and Metasploitable.
+  </p>
+
+  <h2>📊 Project Overview</h2>
+  <p>
+    The goal of this project was to perform network reconnaissance, identify 
+    vulnerabilities, exploit them, and visualize the results using Power BI.
+  </p>
+
+  <h2>🧠 Penetration Testing Workflow</h2>
+  <ul>
+    <li>Network scanning using Netcat and Nmap</li>
+    <li>Service enumeration and analysis</li>
+    <li>Identification of vulnerable services</li>
+    <li>Exploitation using Metasploit Framework</li>
+    <li>Successful root-level system access achieved</li>
+  </ul>
+
+  <h2>🚨 Key Findings</h2>
+  <ul>
+    <li>Multiple insecure services detected (FTP, Telnet, SMTP, HTTP)</li>
+    <li>Critical vulnerability: UnrealIRCd backdoor (CVE-2010-2075)</li>
+    <li>Weak authentication via Telnet</li>
+    <li>Successful exploitation with root shell access</li>
+  </ul>
+
+  <h2>🛠 Technologies Used</h2>
+  <ul>
+    <li>Kali Linux</li>
+    <li>Nmap & Netcat</li>
+    <li>Metasploit Framework</li>
+    <li>Power BI</li>
+    <li>VMware</li>
+  </ul>
+
+  <h2>📊 Live Dashboard</h2>
+
+<div style="margin-top: 20px;">
+
+  <iframe 
+    title="Cybersecurity_Dashboard"
+    width="100%" 
+    height="600"
+    src="https://app.powerbi.com/reportEmbed?reportId=e3a8a05d-5909-409a-8ca0-598dc9d2fa3c&autoAuth=true&ctid=42804ae1-d2e9-40b7-a4a3-45811234298b&actionBarEnabled=true&reportCopilotInEmbed=true"
+    frameborder="0" 
+    allowFullScreen="true">
+  </iframe>
+
+</div>
+
 </div>
 
 {% endblock %}
