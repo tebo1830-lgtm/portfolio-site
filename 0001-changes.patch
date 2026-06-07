@@ -1,0 +1,806 @@
+From da08d7fc83e7a172cf0cd7b0b1443795786aca24 Mon Sep 17 00:00:00 2001
+From: tebo1830-lgtm <tebo1830@gmail.com>
+Date: Sun, 7 Jun 2026 14:44:26 +0000
+Subject: [PATCH] changes
+
+---
+ python_programs/README.txt            |  12 +-
+ python_programs/db_helpers.py         |  50 +++++++
+ python_programs/fertilizer_catalog.py | 196 ++++++++++++++++++--------
+ python_programs/fertilizer_editing.py | 177 +++++++++++++++++------
+ python_programs/metadata.json         |   5 +-
+ python_programs/people.db             | Bin 8192 -> 8192 bytes
+ python_programs/supplies.db           | Bin 0 -> 16384 bytes
+ python_programs/tilling_the_soil.py   | 127 +++++++----------
+ python_programs/users_db_project.py   |  78 +++++++++-
+ 9 files changed, 456 insertions(+), 189 deletions(-)
+ create mode 100644 python_programs/supplies.db
+
+diff --git a/python_programs/README.txt b/python_programs/README.txt
+index e93f4e8..7ee98cd 100644
+--- a/python_programs/README.txt
++++ b/python_programs/README.txt
+@@ -5,10 +5,12 @@ calculate.py
+ 
+ Files will be listed on /python-projects and can be executed with the Run button.
+ 
+-DB project grouping:
+-- createDB.py: initialize the shared people.db users table
+-- insert_recs.py: seed or update users from users.py into the same shared database
+-- show_records.py: display all users from the shared database
+-- users_db_project.py: grouped project that runs the whole workflow in one execution
++DB project grouping (run in this order):
++1. createDB.py - ensure the shared people.db and users table exist
++2. insert_recs.py - seed default users into the shared database
++3. show_records.py - display current users from the shared database
++4. users_db_project.py - interactive menu for creating, seeding, updating, and viewing users
++
++If you want a single interactive workflow, run users_db_project.py and choose options 1-4.
+ 
+ Security: Only .py files inside this folder can be executed. Execution is limited by a timeout and output length.
+diff --git a/python_programs/db_helpers.py b/python_programs/db_helpers.py
+index 220da6e..266e10e 100644
+--- a/python_programs/db_helpers.py
++++ b/python_programs/db_helpers.py
+@@ -43,3 +43,53 @@ def seed_users(users):
+         )
+     conn.commit()
+     conn.close()
++
++
++def supplies_db_path():
++    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'supplies.db')
++
++
++def get_supplies_connection():
++    return sqlite3.connect(supplies_db_path())
++
++
++def ensure_supplies_table():
++    conn = get_supplies_connection()
++    cursor = conn.cursor()
++    cursor.execute('''
++        CREATE TABLE IF NOT EXISTS fertilizers (
++            fertilizer_id INTEGER PRIMARY KEY AUTOINCREMENT,
++            brand TEXT NOT NULL,
++            price REAL NOT NULL,
++            type TEXT NOT NULL,
++            UNIQUE(brand, type)
++        );
++    ''')
++    conn.commit()
++    conn.close()
++
++
++def seed_supplies_data(initial_data=None):
++    ensure_supplies_table()
++    if initial_data is None:
++        initial_data = [
++            ("GreenGrow", 22.50, "vegetable"),
++            ("HarvestMax", 18.75, "flower"),
++            ("SoilSafe", 15.00, "grass"),
++            ("EcoBlend", 24.95, "tree"),
++            ("CropBoost", 20.00, "vegetable")
++        ]
++    conn = get_supplies_connection()
++    cursor = conn.cursor()
++    for brand, price, ftype in initial_data:
++        cursor.execute(
++            '''
++            INSERT INTO fertilizers (brand, price, type)
++            VALUES (?, ?, ?)
++            ON CONFLICT(brand, type) DO UPDATE SET
++                price=excluded.price
++            ''',
++            (brand, price, ftype)
++        )
++    conn.commit()
++    conn.close()
+diff --git a/python_programs/fertilizer_catalog.py b/python_programs/fertilizer_catalog.py
+index d03730f..72698fa 100644
+--- a/python_programs/fertilizer_catalog.py
++++ b/python_programs/fertilizer_catalog.py
+@@ -1,83 +1,155 @@
+ from flask import Flask, request, jsonify
+-import json,sqlite3
++import sqlite3
++import os
++import sys
++
++from db_helpers import ensure_supplies_table, seed_supplies_data, get_supplies_connection
+ 
+ app = Flask(__name__)
+ 
++
++def format_products(products):
++    return [
++        {'fertilizer_id': p[0], 'brand': p[1], 'price': p[2], 'type': p[3]}
++        for p in products
++    ]
++
++
++def get_products_by_query(sql, params):
++    conn = get_supplies_connection()
++    cursor = conn.cursor()
++    cursor.execute(sql, params)
++    products = cursor.fetchall()
++    conn.close()
++    return products
++
++
++def print_products(products):
++    if not products:
++        print('No matching fertilizers found.')
++        return
++    print('\nFound fertilizers:')
++    for product in products:
++        print(f"ID: {product[0]}, Brand: {product[1]}, Price: ${product[2]:.2f}, Type: {product[3]}")
++    print()
++
++
++def search_by_type_cli():
++    ftype = input('Enter fertilizer type: ').strip()
++    if not ftype:
++        print('Type is required.')
++        return
++    products = get_products_by_query('SELECT * FROM fertilizers WHERE type = ?', (ftype,))
++    print_products(products)
++
++
++def search_by_brand_cli():
++    brand_name = input('Enter brand name: ').strip()
++    if not brand_name:
++        print('Brand is required.')
++        return
++    products = get_products_by_query('SELECT * FROM fertilizers WHERE brand = ?', (brand_name,))
++    print_products(products)
++
++
++def search_by_price_cli():
++    raw_price = input('Enter maximum price: ').strip()
++    try:
++        price = float(raw_price)
++    except ValueError:
++        print('Enter a valid numeric price.')
++        return
++    products = get_products_by_query('SELECT * FROM fertilizers WHERE price <= ?', (price,))
++    print_products(products)
++
++
++def run_cli():
++    while True:
++        print('\nFertilizer Catalog CLI')
++        print('1. Search by type')
++        print('2. Search by brand')
++        print('3. Search by maximum price')
++        print('4. Exit')
++        choice = input('Choose an option: ').strip()
++
++        if choice == '1':
++            search_by_type_cli()
++        elif choice == '2':
++            search_by_brand_cli()
++        elif choice == '3':
++            search_by_price_cli()
++        elif choice == '4':
++            print('Exiting Fertilizer Catalog.')
++            break
++        else:
++            print('Invalid selection.')
++
++
+ @app.route('/')
+ def home():
+     return '''<span style='text-align:center'>
+                 <h1>Welcome to Acme Fertilizer Supply!</h1>
+                 <h3>The Farmer's Choice for Quality Fertilizer</h3>
+             </span>'''
+-            
++
++
+ @app.route('/type')
+-def get_type():
++def type_endpoint():
+     f_type = request.args.get('ftype')
+-    if f_type:
+-        products = get_type(f_type)
+-        return products
+-    else:
++    if not f_type:
+         return jsonify({'error': 'Type parameter is missing'}), 400
++    products = get_products_by_query('SELECT * FROM fertilizers WHERE type = ?', (f_type,))
++    product_list = format_products(products)
++    if not product_list:
++        return jsonify({'message': 'No fertilizer of type ' + f_type + ' found'}), 404
++    return jsonify(product_list)
++
+ 
+ @app.route('/brand')
+-def by_brand():
++def brand_endpoint():
+     brand_name = request.args.get('name')
+-    if brand_name:
+-        products = get_brand(brand_name)
+-        return products
+-    else:
++    if not brand_name:
+         return jsonify({'error': 'brand name parameter is missing'}), 400
+-    
++    products = get_products_by_query('SELECT * FROM fertilizers WHERE brand = ?', (brand_name,))
++    product_list = format_products(products)
++    if not product_list:
++        return jsonify({'message': 'No ' + brand_name + ' brand fertilizers found'}), 404
++    return jsonify(product_list)
++
++
+ @app.route('/cost')
+-def by_cost():
++def cost_endpoint():
+     price = request.args.get('price')
+-    if price:
+-        products = get_products(price)
+-        return products
+-    else:
+-        return jsonify({'error': 'Type parameter is missing'}), 400  
+-      
+-def get_type(ftype):
+-    conn = sqlite3.Connection('supplies.db')
+-    cursor = conn.cursor()
+-    cursor.execute("SELECT * FROM fertilizers WHERE type = ?", (ftype,))
+-    products = cursor.fetchall()
+-    if products:
+-        product_list = []
+-        for product in products:
+-            item = {'fertilizer_id': product[0], 'brand': product[1], 'price': product[2], 'type': product[3]}
+-            product_list.append(item)
+-        return jsonify(product_list)
+-    else:
+-        return jsonify({'message': 'No fertilizer of type '+ ftype + ' found'}), 404
+-    
+-def get_products(_price):
+-    conn = sqlite3.Connection('supplies.db')
+-    cursor = conn.cursor()
+-    cursor.execute("SELECT * FROM fertilizers WHERE price <= ?", (_price,))
+-    products = cursor.fetchall()
+-    if products:
+-        product_list = []
+-        for product in products:
+-            item = {'fertilizer_id': product[0], 'brand': product[1], 'price': product[2], 'type': product[3]}
+-            product_list.append(item)
+-        return jsonify(product_list)
+-    else:
+-        return jsonify({'message': 'No products found at or below '+ _price}), 404
+-        
+-def get_brand(the_brand):
+-    conn = sqlite3.Connection('supplies.db')
+-    cursor = conn.cursor()
+-    cursor.execute("SELECT * FROM fertilizers WHERE brand = ?", (the_brand,))
+-    products = cursor.fetchall()
+-    if products:
+-        product_list = []
+-        for product in products:
+-            item = {'fertilizer_id': product[0], 'brand': product[1], 'price': product[2], 'type': product[3]}
+-            product_list.append(item)
+-        return jsonify(product_list)
++    if not price:
++        return jsonify({'error': 'Price parameter is missing'}), 400
++    try:
++        price_value = float(price)
++    except ValueError:
++        return jsonify({'error': 'Price must be numeric'}), 400
++    products = get_products_by_query('SELECT * FROM fertilizers WHERE price <= ?', (price_value,))
++    product_list = format_products(products)
++    if not product_list:
++        return jsonify({'message': 'No products found at or below ' + price}), 404
++    return jsonify(product_list)
++
++
++def main():
++    ensure_supplies_table()
++    seed_supplies_data()
++
++    print('Fertilizer Catalog is ready.')
++    mode = input('Choose mode (cli/server): ').strip().lower()
++    if mode == 'server':
++        app.run(debug=True)
++    elif mode == 'cli':
++        run_cli()
+     else:
+-        return jsonify({'message': 'No ' + the_brand + ' brand fertilizers found '}), 404 
+-    
++        print('No valid mode chosen; exiting.')
++
++
+ if __name__ == '__main__':
+-    app.run(debug=True)
++    try:
++        main()
++    except (EOFError, KeyboardInterrupt):
++        print('\nExiting Fertilizer Catalog.')
++        sys.exit(0)
+diff --git a/python_programs/fertilizer_editing.py b/python_programs/fertilizer_editing.py
+index 305932c..e291dc6 100644
+--- a/python_programs/fertilizer_editing.py
++++ b/python_programs/fertilizer_editing.py
+@@ -1,58 +1,151 @@
+ from flask import Flask, request, jsonify
+-import json,sqlite3
++import sqlite3
++import os
++import sys
++
++from db_helpers import ensure_supplies_table, seed_supplies_data, get_supplies_connection
+ 
+ app = Flask(__name__)
+ 
++
++def get_supplies_product(which, chem):
++    conn = get_supplies_connection()
++    cursor = conn.cursor()
++    cursor.execute("SELECT * FROM fertilizers WHERE brand = ? AND type = ?", (which, chem))
++    product = cursor.fetchone()
++    conn.close()
++    return product
++
++
++def update_price(brand, _type, price):
++    conn = get_supplies_connection()
++    cursor = conn.cursor()
++    cursor.execute('''UPDATE fertilizers SET price = ? WHERE brand = ? AND type = ?''', (price, brand, _type))
++    conn.commit()
++    conn.close()
++
++
++def access_row(which, chem):
++    return get_supplies_product(which, chem)
++
++
++def print_product(product):
++    if not product:
++        print('Product not found.')
++        return
++    print(f"ID: {product[0]}, Brand: {product[1]}, Price: ${product[2]:.2f}, Type: {product[3]}")
++
++
++def update_price_cli():
++    brand = input('Enter fertilizer brand: ').strip()
++    if not brand:
++        print('Brand is required.')
++        return
++    _type = input('Enter fertilizer type: ').strip()
++    if not _type:
++        print('Type is required.')
++        return
++    product = access_row(brand, _type)
++    if not product:
++        print('No product found for that brand and type.')
++        return
++    print('Current product:')
++    print_product(product)
++    raw_price = input('Enter new price: ').strip()
++    try:
++        price = float(raw_price)
++    except ValueError:
++        print('Invalid price format.')
++        return
++    update_price(brand, _type, price)
++    updated = access_row(brand, _type)
++    print('Updated product:')
++    print_product(updated)
++
++
++def view_product_cli():
++    brand = input('Enter fertilizer brand: ').strip()
++    if not brand:
++        print('Brand is required.')
++        return
++    _type = input('Enter fertilizer type: ').strip()
++    if not _type:
++        print('Type is required.')
++        return
++    product = access_row(brand, _type)
++    print_product(product)
++
++
++def run_cli():
++    while True:
++        print('\nFertilizer Edit CLI')
++        print('1. View fertilizer details')
++        print('2. Update fertilizer price')
++        print('3. Exit')
++        choice = input('Choose an option: ').strip()
++        if choice == '1':
++            view_product_cli()
++        elif choice == '2':
++            update_price_cli()
++        elif choice == '3':
++            print('Exiting Fertilizer Edit CLI.')
++            break
++        else:
++            print('Invalid selection.')
++
++
+ @app.route('/')  # The root/Index of the server
+ def home():
+     return '''<span style='text-align:center'>
+                 <h1>Acme Fertilizer Supply: Database Management</h1>
+                 <h3>Authorized Users Only</h3><hr/>
+             </span>'''
+-            
++
++
+ @app.route('/revise')    # domain/revise route
+ def edit_request():
+-    brand = request.args.get('brand') #URL is of form http://domain/revise?brand=x&type=y 
+-    _type = request.args.get('type') 
+-    price = request.args.get('price') #URL is of form http://domain/revise?brand=x&type=y&price=value 
+-    if (not brand): # missing brand=name
++    brand = request.args.get('brand')
++    _type = request.args.get('type')
++    price = request.args.get('price')
++    if not brand:
+         return jsonify({'error': 'Please provide fertilizer brand.'}), 400
+-    elif(not _type): # missing type=kind
++    if not _type:
+         return jsonify({'error': 'Please provide fertilizer type.'}), 400
+-    elif(not price): # price=value not present if only getting price
+-        product = access_row(brand,_type)
+-        if(product):
+-            return jsonify(product)
+-        else:
+-            return jsonify({'Product not found': brand +":" + _type}), 400
+-    else:  # price=value  present if changing price
+-        product = access_row(brand,_type)  # get product with this brand and type
+-        if(product):
+-            price = float(price)   # change string from URL to decimal
+-            update_price(brand,_type,price) # Call SQL update method
+-            product = access_row(brand,_type)  # Get updated version (version in table)
+-            return jsonify(product)
+-        else:
+-           return jsonify({'Product not found': brand+"  :" + _type}), 400 
+-
+-def access_row(which,chem):
+-    conn = sqlite3.Connection('supplies.db')  # Connect
+-    cursor = conn.cursor()   # Get cursor
+-    cursor.execute("SELECT * FROM fertilizers WHERE brand = ? and type=?", (which,chem))  #Read SQL
+-    product = cursor.fetchone()  #Get row
+-    conn.close() # release resources
+-    if product:
+-        return product  #Got a record
++
++    product = access_row(brand, _type)
++    if not product:
++        return jsonify({'Product not found': brand + ':' + _type}), 400
++
++    if price is None:
++        return jsonify({'fertilizer_id': product[0], 'brand': product[1], 'price': product[2], 'type': product[3]})
++
++    try:
++        price_value = float(price)
++    except ValueError:
++        return jsonify({'error': 'Price must be numeric'}), 400
++
++    update_price(brand, _type, price_value)
++    updated = access_row(brand, _type)
++    return jsonify({'fertilizer_id': updated[0], 'brand': updated[1], 'price': updated[2], 'type': updated[3]})
++
++
++def main():
++    ensure_supplies_table()
++    seed_supplies_data()
++
++    print('Fertilizer Editing tool is ready.')
++    mode = input('Choose mode (cli/server): ').strip().lower()
++    if mode == 'server':
++        app.run(debug=True)
++    elif mode == 'cli':
++        run_cli()
+     else:
+-         return False 
+-    
+-def update_price(brand,_type,price):   # Delegate the updating to this function (decomposition)
+-    conn = sqlite3.connect('supplies.db') # Connect
+-    cursor = conn.cursor() # Get cursor
+-    result = cursor.execute('''UPDATE fertilizers SET price=? WHERE brand = ? and type=?''', (price,brand,_type))
+-    conn.commit() # Make changes permanent
+-    conn.close()  # release resources
+-    return result  
+-  
++        print('No valid mode chosen; exiting.')
++
++
+ if __name__ == '__main__':
+-    app.run(debug=True)
++    try:
++        main()
++    except (EOFError, KeyboardInterrupt):
++        print('\nExiting Fertilizer Editing.')
++        sys.exit(0)
+diff --git a/python_programs/metadata.json b/python_programs/metadata.json
+index 327e033..c437515 100644
+--- a/python_programs/metadata.json
++++ b/python_programs/metadata.json
+@@ -5,5 +5,8 @@
+   "insert_recs.py": "Users DB project: insert or update seed users into the shared people.db.",
+   "show_records.py": "Users DB project: show all users from the shared people.db.",
+   "users.py": "Users DB project seed data used by createDB and insert_recs.",
+-  "users_db_project.py": "Grouped Users DB project: create the database, seed users, and display stored records."
++  "users_db_project.py": "Interactive Users DB project: create, seed, update, and display users in the shared database.",
++  "fertilizer_catalog.py": "Search the fertilizer catalog by type, brand, or price. Uses a seeded supplies.db.",
++  "fertilizer_editing.py": "View or update fertilizer pricing in the shared supplies.db.",
++  "tilling_the_soil.py": "Interactive fertilizer cost and coverage calculator for multiple sections."
+ }
+diff --git a/python_programs/people.db b/python_programs/people.db
+index 160018b1582e4a7d167eaf83ea34a7761a6da579..d222802ad488dbc99b419bcc0d5f1b95f50e5d0e 100644
+GIT binary patch
+delta 67
+zcmZp0XmFSy&B#1a#+i|MW5N=C0XF_T2L31f=lQqr&*5+7&)cjh5XCPp%ErndE6wPa
+XS{@%-oLZEZT3(P?T+B4NRlXVkaa$8*
+
+delta 44
+zcmZp0XmFSy&B!!S#+i|6W5N=CK34u#2L31f=lQqr&*5*~tSI2iKe0h=a;tnb03NOl
+Ai2wiq
+
+diff --git a/python_programs/supplies.db b/python_programs/supplies.db
+new file mode 100644
+index 0000000000000000000000000000000000000000..aa1b4c1ad572a7bdcf94dc5ddba319dd177d6e48
+GIT binary patch
+literal 16384
+zcmeI(J#X4T7zgk>Y(tBbT;Hh6fVhZ-D5z2!RqY5w7DWY;fRW0C95^CN4kork(oR)7
+zb?cNbQK@rB`WgBGI(O>OrDM--Fc7Kj(k{{e5q>%D?m7D>FMbf6{e~R~K61SyE8yGY
+z2BDOcIVXgu7n?jpLFGRDZXRL#Z=sU=)3<Bv2T|5XWc?%iBo7D(KmY;|fB*y_009U<
+z00I!WvI2WbQs3I5y}&wfgn#VFSI)jKj!(pRaJi}Ow2g{saI;cv82r-M;@CP8B{_5R
+zb&{s^LV>>NL^(&o3v9=JDLjAaG_jIvse>2Od?^+^eS663Ez_tOZNAs8H!JNPe`fS}
+zrEBiiTQXhKXqlyz$p@Y_9&*!oZt~Wy+`5g%>VS!74+NKY)%eYT;KfAzDM7bY-|rg5
+zXrU4hM{mYgu=yyF)awOG?D0^XU2s_^fg82^i#zlC50)B=eAKRmkK3BuG&Uvd3!Aa`
+z?43MCKmY;|fB*y_009U<00Izz00bcLPXz918p+fAj^|FQuImSPrs7aUg^aAKkz6Wc
+z4BV<C#>4WH@7rMno)EVc*+un^YdallB-o*6`F<{;k&RULspU<DA2hAA^21qli6h57
+z6<(gog;M#NoIb93?rHh)tEe|#FD;uIJ16X%ePCbNXEuxav4a2vAOHafKmY;|fB*y_
+z009U<;J*v#YCccn>OlOmuH95~89J{Ggf#*6mYUP)yd)4+1eA=rk)?}*z^_6;;;u}2
+wJ+1@9DZ}6YDf>p`2LS;HKmY;|fB*y_009U<00Izzz||07R4LG<{{f_b0%2L!_W%F@
+
+literal 0
+HcmV?d00001
+
+diff --git a/python_programs/tilling_the_soil.py b/python_programs/tilling_the_soil.py
+index 4c3086b..570990b 100644
+--- a/python_programs/tilling_the_soil.py
++++ b/python_programs/tilling_the_soil.py
+@@ -1,87 +1,66 @@
+ import math
+-
+-
+-print('Welcome to the Fertilizer Calculator! I will ask you for the length and width of four rectangular sections. Please enter your measurements in feet (numbers only, please). If you do not have a particular section, simply enter zero (0) for those dimensions!\n')
+-
+-def get_dimension(section_name):
+-	length = float(input(f"What is the length of the {section_name} section? "))
+-	width = float(input(f"What is the width of the {section_name} section? "))
+-	return length, width
+-
+-sections = ['front', 'rear', 'left', 'right']
+-areas = []
+-for section in sections:
+-	length, width = get_dimension(section)
+-	area = length * width
+-	areas.append(area)
+-
+-total_area = int(sum(areas))
+-
+-# Fertilizer calculations
+-import math
+ import sys
+ 
+ 
+ def get_dimension(section_name):
+-	while True:
+-		try:
+-			length = float(input(f"What is the length of the {section_name} section? "))
+-			width = float(input(f"What is the width of the {section_name} section? "))
+-			return length, width
+-		except ValueError:
+-			print('Please enter numeric values for length and width.')
+-		except (EOFError, KeyboardInterrupt):
+-			raise
++    while True:
++        try:
++            length = float(input(f"What is the length of the {section_name} section? "))
++            width = float(input(f"What is the width of the {section_name} section? "))
++            return length, width
++        except ValueError:
++            print('Please enter numeric values for length and width.')
++        except (EOFError, KeyboardInterrupt):
++            raise
+ 
+ 
+ def main():
+-	print('Welcome to the Fertilizer Calculator! I will ask you for the length and width of four rectangular sections. Please enter your measurements in feet (numbers only, please). If you do not have a particular section, simply enter zero (0) for those dimensions!\n')
+-
+-	sections = ['front', 'rear', 'left', 'right']
+-	areas = []
+-	for section in sections:
+-		try:
+-			length, width = get_dimension(section)
+-		except (EOFError, KeyboardInterrupt):
+-			print('\nInput cancelled. Exiting.')
+-			return
+-		area = length * width
+-		areas.append(area)
+-
+-	total_area = int(sum(areas))
+-
+-	# Fertilizer calculations
+-	COVERAGE_PER_BAG = 2000
+-	COST_PER_BAG = 27
+-	NITROGEN_PER_BAG = 1.0
+-	POTASSIUM_PER_BAG = 0.125
+-	SQFT_PER_HOUR = 2500
+-	LABOR_COST_PER_HOUR = 20
+-
+-	bags_needed = math.ceil(total_area / COVERAGE_PER_BAG) if total_area > 0 else 0
+-	cost_fertilizer = bags_needed * COST_PER_BAG
+-	hours_needed = math.ceil(total_area / SQFT_PER_HOUR) if total_area > 0 else 0
+-	cost_labor = hours_needed * LABOR_COST_PER_HOUR
+-	total_cost = cost_fertilizer + cost_labor
+-
+-	nitrogen_applied = bags_needed * NITROGEN_PER_BAG
+-	potassium_applied = bags_needed * POTASSIUM_PER_BAG
+-
+-	print(f"Total area: {total_area} sq. feet\n")
+-	print(f"Cost of fertilizer: ${cost_fertilizer:.2f}\n")
+-	print(f"Bags of fertilizer required: {bags_needed}\n")
+-	print(f"Minimum hours required: {hours_needed}\n")
+-	print(f"Cost of labor: ${cost_labor:.2f}\n")
+-	print(f"Total cost: ${total_cost:.2f}\n")
+-	print(f"Nitrogen applied to soil: {nitrogen_applied:.3f} pounds\n")
+-	print(f"Potassium applied to soil: {potassium_applied:.3f} pounds")
++    print('Welcome to the Fertilizer Calculator! I will ask you for the length and width of four rectangular sections. Please enter your measurements in feet (numbers only, please). If you do not have a particular section, simply enter zero (0) for those dimensions!\n')
++
++    sections = ['front', 'rear', 'left', 'right']
++    areas = []
++    for section in sections:
++        try:
++            length, width = get_dimension(section)
++        except (EOFError, KeyboardInterrupt):
++            print('\nInput cancelled. Exiting.')
++            return
++        area = length * width
++        areas.append(area)
++
++    total_area = int(sum(areas))
++
++    COVERAGE_PER_BAG = 2000
++    COST_PER_BAG = 27
++    NITROGEN_PER_BAG = 1.0
++    POTASSIUM_PER_BAG = 0.125
++    SQFT_PER_HOUR = 2500
++    LABOR_COST_PER_HOUR = 20
++
++    bags_needed = math.ceil(total_area / COVERAGE_PER_BAG) if total_area > 0 else 0
++    cost_fertilizer = bags_needed * COST_PER_BAG
++    hours_needed = math.ceil(total_area / SQFT_PER_HOUR) if total_area > 0 else 0
++    cost_labor = hours_needed * LABOR_COST_PER_HOUR
++    total_cost = cost_fertilizer + cost_labor
++
++    nitrogen_applied = bags_needed * NITROGEN_PER_BAG
++    potassium_applied = bags_needed * POTASSIUM_PER_BAG
++
++    print(f"Total area: {total_area} sq. feet\n")
++    print(f"Cost of fertilizer: ${cost_fertilizer:.2f}\n")
++    print(f"Bags of fertilizer required: {bags_needed}\n")
++    print(f"Minimum hours required: {hours_needed}\n")
++    print(f"Cost of labor: ${cost_labor:.2f}\n")
++    print(f"Total cost: ${total_cost:.2f}\n")
++    print(f"Nitrogen applied to soil: {nitrogen_applied:.3f} pounds\n")
++    print(f"Potassium applied to soil: {potassium_applied:.3f} pounds")
+ 
+ 
+ if __name__ == '__main__':
+-	try:
+-		main()
+-	except KeyboardInterrupt:
+-		print('\nExiting...')
+-		sys.exit(0)
++    try:
++        main()
++    except KeyboardInterrupt:
++        print('\nExiting...')
++        sys.exit(0)
+ 
+ 
+diff --git a/python_programs/users_db_project.py b/python_programs/users_db_project.py
+index e361063..17c458a 100644
+--- a/python_programs/users_db_project.py
++++ b/python_programs/users_db_project.py
+@@ -1,16 +1,84 @@
+-"""Grouped Users DB project: create the database, seed users, and display stored records."""
++"""Interactive Users DB project: create the DB, seed users, add/update users, and show current records."""
+ 
+ from createDB import main as create_db_main
+ from insert_recs import main as insert_recs_main
+ from show_records import showRecords as show_records_main
++from db_helpers import get_connection, ensure_users_table
++
++
++def add_or_update_user():
++    try:
++        raw_id = input('Enter user ID to add/update (leave blank for auto next ID): ').strip()
++        user_id = int(raw_id) if raw_id else None
++    except ValueError:
++        print('User ID must be an integer.')
++        return
++    username = input('Enter username: ').strip()
++    if not username:
++        print('Username is required.')
++        return
++    password = input('Enter password: ').strip()
++    if not password:
++        print('Password is required.')
++        return
++    try:
++        auth_level = int(input('Enter auth level (integer): ').strip())
++    except ValueError:
++        print('Auth level must be an integer.')
++        return
++
++    ensure_users_table()
++    conn = get_connection()
++    cursor = conn.cursor()
++    if user_id is None:
++        cursor.execute('SELECT MAX(user_id) FROM users')
++        max_id = cursor.fetchone()[0] or 0
++        user_id = max_id + 1
++
++    cursor.execute(
++        '''
++        INSERT INTO users (user_id, username, password, auth_level)
++        VALUES (?, ?, ?, ?)
++        ON CONFLICT(user_id) DO UPDATE SET
++            username=excluded.username,
++            password=excluded.password,
++            auth_level=excluded.auth_level
++        ''',
++        (user_id, username, password, auth_level)
++    )
++    conn.commit()
++    conn.close()
++    print(f'User {username} saved with user_id {user_id}.')
++
++
++def show_menu():
++    print('\nUsers DB Project Menu:')
++    print('1. Ensure DB and users table exists')
++    print('2. Seed default users')
++    print('3. Add or update a user')
++    print('4. Show current users')
++    print('5. Exit')
+ 
+ 
+ def main():
+     print('Starting Users DB grouped project...')
+-    create_db_main()
+-    insert_recs_main()
+-    print('\nShowing current records:')
+-    show_records_main()
++    while True:
++        show_menu()
++        selection = input('Choose an option: ').strip()
++        if selection == '1':
++            create_db_main()
++        elif selection == '2':
++            insert_recs_main()
++        elif selection == '3':
++            add_or_update_user()
++        elif selection == '4':
++            print('\nShowing current records:')
++            show_records_main()
++        elif selection == '5':
++            print('Goodbye.')
++            break
++        else:
++            print('Please select a valid option.')
+ 
+ 
+ if __name__ == '__main__':
+-- 
+2.53.0
+
