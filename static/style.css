@@ -129,10 +129,13 @@ nav a { color:white; margin:10px; text-decoration:none; }
     display: block;
 }
 .python-projects-page .terminal-input-row {
-    display: flex;
+    display: none;
     gap: 10px;
     margin-top: 12px;
     flex-wrap: wrap;
+}
+.python-projects-page .project-card.has-session .terminal-input-row {
+    display: flex;
 }
 .python-projects-page .terminal-input-row input {
     flex: 1 1 280px;

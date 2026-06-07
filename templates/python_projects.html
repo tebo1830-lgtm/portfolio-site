@@ -29,7 +29,14 @@
           {% if f.description %}
           <p class="project-description">{{ f.description }}</p>
           {% endif %}
-          <div class="output-box" aria-live="polite"></div>
+          <div class="terminal-wrapper">
+            <pre class="output-box" aria-live="polite"></pre>
+            <div class="terminal-input-row">
+              <input type="text" class="terminal-input" data-fname="{{ f.name }}" placeholder="Type input here and press Enter" autocomplete="off" disabled />
+              <button class="send-input-btn" data-fname="{{ f.name }}" disabled>Send</button>
+              <button class="terminate-btn" data-fname="{{ f.name }}" disabled>Stop</button>
+            </div>
+          </div>
         </article>
         {% endfor %}
       {% endif %}
@@ -113,11 +120,13 @@ async function startSession(fname, card) {
     }
 
     sessions[fname] = { session_id: data.session_id, finished: data.finished };
+    card.classList.add('has-session');
     appendOutput(card, data.output || '');
     if (!data.finished) {
       updateCardState(card, true);
       startPolling(fname, card);
     } else {
+      updateCardState(card, false);
       appendOutput(card, (data.output || '') + '\n\n[Process ended, return code: ' + data.returncode + ']');
     }
   } catch (err) {
@@ -219,6 +228,7 @@ async function terminateSession(fname, card) {
     console.error(err);
   } finally {
     updateCardState(card, false);
+    card.classList.remove('has-session');
     stopPolling(session.session_id);
     appendOutput(card, '\n[Session terminated]');
     delete sessions[fname];
