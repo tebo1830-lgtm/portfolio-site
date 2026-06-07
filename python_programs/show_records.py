@@ -1,19 +1,16 @@
-import sqlite3
-import os
-
-
-def db_path():
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'people.db')
+from db_helpers import ensure_users_table, get_connection
 
 
 def showRecords():
-    title = "All Records From the Table Users: "
-    conn = sqlite3.connect(db_path())
+    ensure_users_table()
+    title = "All Records From the Table Users:"
+    conn = get_connection()
     cursor = conn.cursor()
-    sql = "SELECT * FROM users"
-    cursor.execute(sql)
+    cursor.execute("SELECT * FROM users ORDER BY user_id")
     rows = cursor.fetchall()
     print(title)
+    if not rows:
+        print("No records found.")
     for row in rows:
         print(f"{row[0]} {row[1]} {row[2]} {row[3]}")
     conn.close()

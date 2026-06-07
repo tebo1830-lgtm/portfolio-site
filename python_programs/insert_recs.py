@@ -1,27 +1,28 @@
-import sqlite3
-import os
+from db_helpers import ensure_users_table, get_connection
 from users import users
 
 
-def db_path():
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'people.db')
-
 
 def main():
-    conn = sqlite3.connect(db_path())
+    ensure_users_table()
+    conn = get_connection()
     cursor = conn.cursor()
 
     for user in users:
-        cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user['user_id'],))
-        if cursor.fetchone() is None:
-            cursor.execute(
-                "INSERT INTO users (user_id, username, password, auth_level) VALUES (?, ?, ?, ?)",
-                (user['user_id'], user['username'], user['password'], user['auth_level'])
-            )
+        cursor.execute(
+            '''
+            INSERT INTO users (user_id, username, password, auth_level)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET
+                username=excluded.username,
+                password=excluded.password,
+                auth_level=excluded.auth_level
+            ''',
+            (user['user_id'], user['username'], user['password'], user['auth_level'])
+        )
 
     conn.commit()
     conn.close()
-
     print("Data inserted successfully.")
 
 
