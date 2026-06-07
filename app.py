@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_file, abort, request, jsonify
+from flask import Flask, render_template, send_file, abort, request, jsonify, url_for
 from pathlib import Path
 import os
 import json
@@ -171,6 +171,51 @@ COURSES = {
     }
 }
 
+CERTIFICATE_TRACKS = [
+    {
+        "id": "technical-support-engineer",
+        "title": "Technical Support Engineer",
+        "summary": "Practical IT support skills for hardware, networking, desktop support, and programming fundamentals.",
+        "status": "Completed",
+        "detail": "All 5 courses completed",
+        "courses": [
+            {"id": "pc-hardware", "note": "Completed"},
+            {"id": "networking-fundamentals", "note": "Completed"},
+            {"id": "cloud-server", "note": "Completed"},
+            {"id": "intro-it", "note": "Completed"},
+            {"id": "applied-programming", "note": "Completed"}
+        ]
+    },
+    {
+        "id": "it-professional",
+        "title": "IT Professional",
+        "summary": "Advanced IT skills in databases, Linux, cloud, networking, and cybersecurity.",
+        "status": "In Progress",
+        "detail": "4 of 5 courses complete",
+        "courses": [
+            {"id": "database-design", "note": "Completed"},
+            {"id": "linux-fundamentals", "note": "Completed"},
+            {"id": "cloud-computing", "note": "Completed"},
+            {"id": "network-config", "note": "Completed"},
+            {"id": "cybersecurity-foundations", "note": "In Progress"}
+        ]
+    },
+    {
+        "id": "system-administration",
+        "title": "System Administration",
+        "summary": "Foundational server and network administration training for entry-level sysadmin roles.",
+        "status": "In Progress",
+        "detail": "2 of 5 courses in progress",
+        "courses": [
+            {"id": "business-intelligence", "note": "In Progress"},
+            {"id": "advanced-linux", "note": "In Progress"},
+            {"id": "scripting-security", "note": "Planned"},
+            {"id": "azure-tech", "note": "Planned"},
+            {"id": "aws-practitioner", "note": "Planned"}
+        ]
+    }
+]
+
 # ---------------- HOME ----------------
 @app.route('/')
 def home():
@@ -203,7 +248,36 @@ def cybersecurity():
 
 @app.route('/certifications')
 def certifications():
-    return render_template('certifications.html')
+    certificates = []
+    for cert in CERTIFICATE_TRACKS:
+        courses = []
+        completed = 0
+        for item in cert['courses']:
+            course = COURSES.get(item['id'], {})
+            title = course.get('title', item['id'].replace('-', ' ').title())
+            url = url_for('course_detail', course_id=item['id']) if item['id'] in COURSES else None
+            note = item['note']
+            if note == 'Completed':
+                completed += 1
+            courses.append({
+                'id': item['id'],
+                'title': title,
+                'url': url,
+                'note': note
+            })
+
+        certificates.append({
+            'id': cert['id'],
+            'title': cert['title'],
+            'summary': cert['summary'],
+            'status': cert['status'],
+            'detail': cert['detail'],
+            'courses': courses,
+            'completed': completed,
+            'total': len(courses)
+        })
+
+    return render_template('certifications.html', certificates=certificates)
 
 @app.route('/skills')
 def skills():

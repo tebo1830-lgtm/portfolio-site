@@ -2,84 +2,70 @@
 {% block content %}
 
 <div class="card">
-<h1>Certifications & Credentials</h1>
-
-<p>
-These certificates reflect a strong foundation in technical support, systems administration, and broader IT skills that are directly applicable to entry-level roles and internships.
-</p>
-
-<div class="certification-diagram">
-    <div class="diagram-node">
-
-    <div class="diagram-icon">🖥️🛠️</div>
-
-    <h3>Technical Support Engineer</h3>
-
-    <p>Completed. Focused on desktop support, hardware, networking basics, and end-user troubleshooting.</p>
-
-    <a href="{{ url_for('static', filename='eDiploma.pdf') }}" download class="btn">
-        📄 Download eDiploma
-    </a>
-
-    <span class="diagram-status completed">Completed</span>
-
+  <h1>Certifications & Credentials</h1>
+  <p>Click a certificate below to see only the courses that belong to that track, with the correct completed or in progress status for each course.</p>
 </div>
-    <a class="diagram-link" href="/byu">
-        <div class="diagram-node">
-            <div class="diagram-icon">🧑‍💻</div>
-            <h3>IT Professional</h3>
-            <p>In progress. Covers deeper networking, Linux, cloud fundamentals, and professional IT practices.</p>
-            <span class="diagram-status progress">In Progress</span>
+
+<div class="certificate-tabs">
+  {% for cert in certificates %}
+    <button class="cert-tab{% if loop.first %} active{% endif %}" data-target="{{ cert.id }}">{{ cert.title }}</button>
+  {% endfor %}
+</div>
+
+<div class="certificate-panels">
+  {% for cert in certificates %}
+    <section class="certificate-panel{% if not loop.first %} hidden{% endif %}" id="{{ cert.id }}">
+      <div class="card">
+        <h2>{{ cert.title }}</h2>
+        <p>{{ cert.summary }}</p>
+        <p class="status">{{ cert.detail }}</p>
+        <div class="certificate-summary">
+          <span class="certificate-status {{ cert.status|lower|replace(' ', '-') }}">{{ cert.status }}</span>
+          <span>{{ cert.completed }} of {{ cert.total }} courses complete</span>
         </div>
-    </a>
-    <a class="diagram-link" href="/byu">
-        <div class="diagram-node">
-            <div class="diagram-icon">⚙️</div>
-            <h3>System Administration</h3>
-            <p>In progress. Builds foundational skills for server management, cloud operations, and infrastructure support.</p>
-            <span class="diagram-status progress">In Progress</span>
-        </div>
-    </a>
+      </div>
+
+      <div class="card">
+        <h3>Courses in this certificate</h3>
+        <ul class="certificate-course-list">
+          {% for course in cert.courses %}
+            <li class="course-item {{ course.note|lower|replace(' ', '-') }}">
+              {% if course.url %}
+                <a href="{{ course.url }}">{{ course.title }}</a>
+              {% else %}
+                {{ course.title }}
+              {% endif %}
+              <span class="course-status">{{ course.note }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+  {% endfor %}
 </div>
 
-<div class="diagram-footer">
-    <div class="diagram-connector"></div>
-    <a class="diagram-link" href="/byu">
-        <div class="diagram-node diagram-bottom">
-            <div class="diagram-icon">🎓</div>
-            <h3>Information Technology Degree</h3>
-            <p>BYU Pathway bachelor's pathway built from completed and in-progress certifications.</p>
-            <span class="diagram-status degree">Degree Path</span>
-        </div>
-    </a>
+<div class="card callout-card">
+  <h2>Degree Pathway</h2>
+  <p>The Information Technology degree is built from these certificate tracks. This view focuses on one certificate at a time so employers and reviewers can quickly see which courses are relevant and the exact progress through that certificate.</p>
+  <p><a href="/byu">View the full BYU degree progress page</a></p>
 </div>
 
-<h2>Completed Certificates</h2>
-<ul>
-  <li>
-    <strong>Technical Support Engineer Certificate</strong> - BYU Pathway
-    <p>This certificate develops practical skills for technical support roles, including computer applications, hardware, desktop support, programming fundamentals, and networking. It is designed for students pursuing the most common entry-level positions in IT.</p>
-  </li>
-</ul>
+<script>
+const tabs = document.querySelectorAll('.cert-tab');
+const panels = document.querySelectorAll('.certificate-panel');
 
-<h2>In Progress</h2>
-<ul>
-  <li>
-    <strong>IT Professional Certificate</strong> - BYU Pathway (4/5 courses completed)
-    <p>Focused on advanced IT concepts and professional practices that support a broader technology career path.</p>
-  </li>
-  <li>
-    <strong>System Administration Certificate</strong> - BYU Pathway (2/5 courses completed)
-    <p>This certificate builds a foundation in server and network administration, preparing students for entry-level sysadmin positions or internships in the system administration field.</p>
-  </li>
-</ul>
+function activateCertificate(targetId) {
+  tabs.forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.target === targetId);
+  });
+  panels.forEach(panel => {
+    panel.classList.toggle('hidden', panel.id !== targetId);
+  });
+}
 
-<h2>Bachelor's Degree</h2>
-<p><strong>Information Technology</strong> - BYU Pathway (3 certificates in progress)</p>
-<p>
-  <a href="/byu" style="text-decoration: underline;">View detailed course progress</a>
-</p>
-
-</div>
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => activateCertificate(tab.dataset.target));
+});
+</script>
 
 {% endblock %}
