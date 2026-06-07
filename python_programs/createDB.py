@@ -1,5 +1,6 @@
-from db_helpers import ensure_users_table
+"""Users DB project: initialize the shared people.db users table."""
 
+from db_helpers import ensure_users_table
 
 
 def main():

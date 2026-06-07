@@ -1,6 +1,7 @@
+"""Users DB project: insert or update seed users into the shared people.db."""
+
 from db_helpers import ensure_users_table, get_connection
 from users import users
-
 
 
 def main():

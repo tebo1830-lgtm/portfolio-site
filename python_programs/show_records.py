@@ -1,3 +1,5 @@
+"""Users DB project: display all records from the shared people.db users table."""
+
 from db_helpers import ensure_users_table, get_connection
 
 

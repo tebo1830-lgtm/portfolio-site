@@ -1,4 +1,9 @@
 {
   "hello.py": "Sample project that prints a hello message.",
-  "example_project.py": "A project example that demonstrates core CS104 concepts."
+  "example_project.py": "A project example that demonstrates core CS104 concepts.",
+  "createDB.py": "Users DB project: create or ensure the shared people.db users table.",
+  "insert_recs.py": "Users DB project: insert or update seed users into the shared people.db.",
+  "show_records.py": "Users DB project: show all users from the shared people.db.",
+  "users.py": "Users DB project seed data used by createDB and insert_recs.",
+  "users_db_project.py": "Grouped Users DB project: create the database, seed users, and display stored records."
 }
