@@ -52,6 +52,7 @@
 
 <script>
 function buildProjectCard(file, index) {
+  const safeId = file.name.replace(/\./g, '-');
   return `
     <article class="project-card" data-filename="${file.name}">
       <div class="project-card-header">
@@ -62,9 +63,166 @@ function buildProjectCard(file, index) {
         <button class="run-btn" data-fname="${file.name}">Run</button>
       </div>
       ${file.description ? `<p class="project-description">${file.description}</p>` : ''}
-      <div class="output-box" aria-live="polite"></div>
+      <div class="terminal-wrapper">
+        <pre class="output-box" id="output-${safeId}" aria-live="polite"></pre>
+        <div class="terminal-input-row">
+          <input type="text" class="terminal-input" data-fname="${file.name}" placeholder="Type input here and press Enter" autocomplete="off" disabled />
+          <button class="send-input-btn" data-fname="${file.name}" disabled>Send</button>
+          <button class="terminate-btn" data-fname="${file.name}" disabled>Stop</button>
+        </div>
+      </div>
     </article>
   `;
+}
+
+const sessions = {};
+const pollTimers = {};
+
+function updateCardState(card, enabled) {
+  const input = card.querySelector('.terminal-input');
+  const sendBtn = card.querySelector('.send-input-btn');
+  const stopBtn = card.querySelector('.terminate-btn');
+  if (input) input.disabled = !enabled;
+  if (sendBtn) sendBtn.disabled = !enabled;
+  if (stopBtn) stopBtn.disabled = !enabled;
+}
+
+function appendOutput(card, text) {
+  const out = card.querySelector('.output-box');
+  if (!out) return;
+  out.classList.add('active');
+  out.textContent = text;
+  out.scrollTop = out.scrollHeight;
+}
+
+async function startSession(fname, card) {
+  const out = card.querySelector('.output-box');
+  appendOutput(card, 'Starting terminal...');
+  updateCardState(card, false);
+
+  try {
+    const res = await fetch('/api/python-projects/session/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: fname })
+    });
+    const data = await res.json();
+    if (data.error) {
+      appendOutput(card, 'Error: ' + data.error);
+      return;
+    }
+
+    sessions[fname] = { session_id: data.session_id, finished: data.finished };
+    appendOutput(card, data.output || '');
+    if (!data.finished) {
+      updateCardState(card, true);
+      startPolling(fname, card);
+    } else {
+      appendOutput(card, (data.output || '') + '\n\n[Process ended, return code: ' + data.returncode + ']');
+    }
+  } catch (err) {
+    appendOutput(card, 'Request failed: ' + err);
+  }
+}
+
+async function writeSessionInput(fname, card, userInput) {
+  const session = sessions[fname];
+  if (!session) return;
+  try {
+    const res = await fetch('/api/python-projects/session/write', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: session.session_id, input: userInput })
+    });
+    const data = await res.json();
+    if (data.error) {
+      appendOutput(card, 'Error: ' + data.error);
+      return;
+    }
+    session.finished = data.finished;
+    appendOutput(card, data.output || '');
+    if (data.finished) {
+      updateCardState(card, false);
+      stopPolling(session.session_id);
+      appendOutput(card, '\n[Process finished, return code: ' + data.returncode + ']');
+    }
+  } catch (err) {
+    appendOutput(card, 'Request failed: ' + err);
+  }
+}
+
+async function pollSession(sessionId, card) {
+  if (!sessionId) {
+    return;
+  }
+  try {
+    const res = await fetch('/api/python-projects/session/poll', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId })
+    });
+    const data = await res.json();
+    if (data.error) {
+      appendOutput(card, 'Error: ' + data.error);
+      stopPolling(sessionId);
+      return;
+    }
+    appendOutput(card, data.output || '');
+    if (data.finished) {
+      const fname = card.dataset.filename;
+      const session = sessions[fname];
+      if (session) {
+        session.finished = true;
+      }
+      updateCardState(card, false);
+      stopPolling(sessionId);
+      appendOutput(card, '\n[Process finished, return code: ' + data.returncode + ']');
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function startPolling(fname, card) {
+  const session = sessions[fname];
+  if (!session || pollTimers[session.session_id]) {
+    return;
+  }
+  pollTimers[session.session_id] = setInterval(() => {
+    const current = sessions[fname];
+    if (!current || current.finished) {
+      stopPolling(session.session_id);
+      return;
+    }
+    pollSession(session.session_id, card);
+  }, 800);
+}
+
+function stopPolling(sessionId) {
+  if (!sessionId) return;
+  if (pollTimers[sessionId]) {
+    clearInterval(pollTimers[sessionId]);
+    delete pollTimers[sessionId];
+  }
+}
+
+async function terminateSession(fname, card) {
+  const session = sessions[fname];
+  if (!session) return;
+  try {
+    await fetch('/api/python-projects/session/terminate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: session.session_id })
+    });
+  } catch (err) {
+    console.error(err);
+  } finally {
+    updateCardState(card, false);
+    stopPolling(session.session_id);
+    appendOutput(card, '\n[Session terminated]');
+    delete sessions[fname];
+  }
 }
 
 async function refreshProjectList() {
@@ -105,31 +263,46 @@ document.addEventListener('click', async (e) => {
   if (e.target.classList.contains('run-btn')) {
     const fname = e.target.dataset.fname;
     const card = e.target.closest('.project-card');
-    const out = card.querySelector('.output-box');
-    out.classList.add('active');
-    out.textContent = 'Running...';
-
-    try {
-      const res = await fetch('/api/run-python', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: fname })
-      });
-      const data = await res.json();
-      if (data.success) {
-        out.textContent = '';
-        if (data.stdout) out.textContent += data.stdout + '\n';
-        if (data.stderr) out.textContent += '\n--- STDERR ---\n' + data.stderr;
-        out.textContent += '\n\nReturn code: ' + data.returncode;
-      } else if (data.error) {
-        out.textContent = 'Error: ' + data.error;
-      } else {
-        out.textContent = JSON.stringify(data, null, 2);
-      }
-    } catch (err) {
-      out.textContent = 'Request failed: ' + err;
-    }
+    if (!card) return;
+    await startSession(fname, card);
+    return;
   }
+
+  if (e.target.classList.contains('send-input-btn')) {
+    const fname = e.target.dataset.fname;
+    const card = e.target.closest('.project-card');
+    const input = card.querySelector('.terminal-input');
+    if (!input) return;
+    const value = input.value;
+    if (!value.trim()) {
+      return;
+    }
+    input.value = '';
+    await writeSessionInput(fname, card, value);
+    return;
+  }
+
+  if (e.target.classList.contains('terminate-btn')) {
+    const fname = e.target.dataset.fname;
+    const card = e.target.closest('.project-card');
+    if (!card) return;
+    await terminateSession(fname, card);
+    return;
+  }
+});
+
+document.addEventListener('keydown', async (e) => {
+  if (e.key !== 'Enter') return;
+  const input = e.target.closest && e.target.closest('.terminal-input');
+  if (!input) return;
+  e.preventDefault();
+  const card = input.closest('.project-card');
+  if (!card) return;
+  const fname = input.dataset.fname;
+  const value = input.value;
+  if (!value.trim()) return;
+  input.value = '';
+  await writeSessionInput(fname, card, value);
 });
 </script>
 

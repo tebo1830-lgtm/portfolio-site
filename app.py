@@ -7,6 +7,9 @@ import mimetypes
 import subprocess
 import sys
 import shlex
+import threading
+import time
+import uuid
 
 app = Flask(__name__)
 
@@ -33,6 +36,68 @@ def is_safe_path(file_path, allowed_base_paths):
         return False
     except:
         return False
+
+# Interactive Python execution sessions
+PYTHON_SESSION_STORE = {}
+SESSION_TIMEOUT = 300
+MAX_OUTPUT_LENGTH = 20000
+
+
+def cleanup_python_sessions():
+    now = time.time()
+    stale_keys = []
+    for session_id, session in list(PYTHON_SESSION_STORE.items()):
+        age = now - session.get('last_activity', now)
+        finished_at = session.get('finished_at')
+        if age > SESSION_TIMEOUT or (session.get('finished') and finished_at and now - finished_at > 60):
+            stale_keys.append(session_id)
+    for session_id in stale_keys:
+        session = PYTHON_SESSION_STORE.pop(session_id, None)
+        if not session:
+            continue
+        proc = session.get('process')
+        if proc and proc.poll() is None:
+            try:
+                proc.kill()
+            except Exception:
+                pass
+
+
+def _python_process_reader(session_id):
+    session = PYTHON_SESSION_STORE.get(session_id)
+    if not session:
+        return
+
+    proc = session['process']
+    try:
+        while True:
+            if proc.stdout is None:
+                break
+            char = proc.stdout.read(1)
+            if char == '':
+                if proc.poll() is not None:
+                    break
+                time.sleep(0.01)
+                continue
+            with session['lock']:
+                if len(session['output']) < MAX_OUTPUT_LENGTH:
+                    session['output'] += char
+                elif not session['output'].endswith('\n...[output truncated]\n'):
+                    session['output'] = session['output'][:MAX_OUTPUT_LENGTH - 27] + '\n...[output truncated]\n'
+                session['last_activity'] = time.time()
+    except Exception:
+        pass
+    finally:
+        session['finished'] = True
+        session['finished_at'] = time.time()
+        session['returncode'] = proc.poll()
+        try:
+            if proc.stdout:
+                proc.stdout.close()
+            if proc.stdin:
+                proc.stdin.close()
+        except Exception:
+            pass
 
 # -------- COURSE MATERIALS PATHS --------
 ONEDRIVE_BASE_PATH = r"C:\Users\User\OneDrive - BYU-Pathway Worldwide\BYU"
@@ -671,6 +736,122 @@ def python_projects_files():
                 })
 
     return jsonify({'files': files})
+
+
+@app.route('/api/python-projects/session/start', methods=['POST'])
+def python_project_session_start():
+    cleanup_python_sessions()
+    data = request.json or {}
+    filename = data.get('filename')
+    if not filename:
+        return jsonify({'error': 'No filename provided'}), 400
+
+    repo_root = os.path.dirname(os.path.abspath(__file__))
+    local_folder = os.path.join(repo_root, 'python_programs')
+    target_path = os.path.join(local_folder, os.path.basename(filename))
+
+    if not is_safe_path(target_path, [local_folder]):
+        return jsonify({'error': 'Access denied'}), 403
+    if not os.path.exists(target_path) or not os.path.isfile(target_path):
+        return jsonify({'error': 'File not found'}), 404
+
+    session_id = uuid.uuid4().hex
+    proc = subprocess.Popen(
+        [sys.executable, '-u', target_path],
+        cwd=local_folder,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1
+    )
+
+    session = {
+        'process': proc,
+        'output': '',
+        'lock': threading.Lock(),
+        'finished': False,
+        'returncode': None,
+        'last_activity': time.time(),
+        'finished_at': None
+    }
+    PYTHON_SESSION_STORE[session_id] = session
+    thread = threading.Thread(target=_python_process_reader, args=(session_id,), daemon=True)
+    thread.start()
+
+    time.sleep(0.05)
+    with session['lock']:
+        current_output = session['output']
+
+    return jsonify({'session_id': session_id, 'output': current_output, 'finished': session['finished'], 'returncode': session['returncode']})
+
+
+@app.route('/api/python-projects/session/write', methods=['POST'])
+def python_project_session_write():
+    cleanup_python_sessions()
+    data = request.json or {}
+    session_id = data.get('session_id')
+    user_input = data.get('input', '')
+    if not session_id:
+        return jsonify({'error': 'No session_id provided'}), 400
+
+    session = PYTHON_SESSION_STORE.get(session_id)
+    if not session:
+        return jsonify({'error': 'Session not found'}), 404
+
+    proc = session['process']
+    if proc.poll() is not None:
+        with session['lock']:
+            return jsonify({'output': session['output'], 'finished': True, 'returncode': session['returncode']})
+
+    try:
+        if proc.stdin is None:
+            return jsonify({'error': 'Process has no stdin available'}), 500
+        if not user_input.endswith('\n'):
+            user_input += '\n'
+        proc.stdin.write(user_input)
+        proc.stdin.flush()
+        session['last_activity'] = time.time()
+    except Exception as e:
+        return jsonify({'error': f'Could not send input: {str(e)}'}), 500
+
+    time.sleep(0.05)
+    with session['lock']:
+        return jsonify({'output': session['output'], 'finished': session['finished'], 'returncode': session['returncode']})
+
+
+@app.route('/api/python-projects/session/poll', methods=['POST'])
+def python_project_session_poll():
+    cleanup_python_sessions()
+    data = request.json or {}
+    session_id = data.get('session_id')
+    if not session_id:
+        return jsonify({'error': 'No session_id provided'}), 400
+
+    session = PYTHON_SESSION_STORE.get(session_id)
+    if not session:
+        return jsonify({'error': 'Session not found'}), 404
+
+    with session['lock']:
+        return jsonify({'output': session['output'], 'finished': session['finished'], 'returncode': session['returncode']})
+
+
+@app.route('/api/python-projects/session/terminate', methods=['POST'])
+def python_project_session_terminate():
+    data = request.json or {}
+    session_id = data.get('session_id')
+    if not session_id:
+        return jsonify({'error': 'No session_id provided'}), 400
+    session = PYTHON_SESSION_STORE.pop(session_id, None)
+    if not session:
+        return jsonify({'error': 'Session not found'}), 404
+    proc = session.get('process')
+    if proc and proc.poll() is None:
+        try:
+            proc.kill()
+        except Exception:
+            pass
+    return jsonify({'success': True})
 
 
 @app.route('/api/run-python', methods=['POST'])
