@@ -1,6 +1,9 @@
-from flask import Flask, render_template, send_file, abort, request
+from flask import Flask, render_template, send_file, abort, request, jsonify
 from pathlib import Path
 import os
+import json
+import base64
+import mimetypes
 
 app = Flask(__name__)
 
@@ -16,9 +19,30 @@ def is_local_access():
         return True
     return False
 
+def is_safe_path(file_path, allowed_base_paths):
+    """Verify that file_path is within allowed directories (prevent directory traversal)"""
+    try:
+        real_path = os.path.realpath(file_path)
+        for allowed_base in allowed_base_paths:
+            allowed_real = os.path.realpath(allowed_base)
+            if real_path.startswith(allowed_real):
+                return True
+        return False
+    except:
+        return False
+
 # -------- COURSE MATERIALS PATHS --------
 ONEDRIVE_BASE_PATH = r"C:\Users\User\OneDrive - BYU-Pathway Worldwide\BYU"
 
+# Allowed paths for file viewing (security)
+ALLOWED_PATHS = [
+    r"F:\BYU",
+    r"C:\Users\User\OneDrive - BYU-Pathway Worldwide\Documents",
+    r"C:\Users\User\OneDrive - BYU-Pathway Worldwide\Recordings"
+]
+
+# OneDrive recordings folder (shared recordings link)
+RECORDINGS_ONEDRIVE_LINK = "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgAAXsavR2q1RL4dYvxeoZNaAawbscjq6BRRRRoVZIk2Ewo?e=mQKQon"
 # -------- COURSE INFORMATION --------
 COURSES = {
     "pc-hardware": {
@@ -65,7 +89,9 @@ COURSES = {
         "title": "Database Design and Analysis",
         "certificate": "IT Professional",
         "description": "Learn database design principles, SQL, and data management.",
-        "url": "https://www.byupathway.edu"
+        "url": "https://www.byupathway.edu",
+        "local_folder": "IT 143 Database Design and Analysis",
+        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgCswwNvuCkzTKtS9dd3at0eAbvqlJxYWSsV0gXTPo37jLw?e=Q9sT0j"
     },
     "linux-fundamentals": {
         "title": "Linux Fundamentals",
@@ -81,7 +107,7 @@ COURSES = {
         "description": "Core concepts of cloud computing, deployment models, and cloud services.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT 160 Cloud Computing Essentials",
-        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgBdYk-rqyVWRoxBxn3QkSe8ASeqIPGKTn7aunzxw6IRobw?e=dRUJtm"
+        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgBdYk-rqyVWRoxBxn3QkSe8ASeqIPGKTn7aunzxw6IRobw?e=yvaLHw"
     },
     "network-config": {
         "title": "Network Configuration & Design",
@@ -89,7 +115,7 @@ COURSES = {
         "description": "Network design, configuration, and best practices for enterprise networks.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT 350 Network Configuration & Design",
-        "onedrive_link": ""  # Add your OneDrive share link here
+        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgDe-H6FSybYRY7ZSASunPGnAV-HzZ1AA2RfXrN83thrJcg?e=hPZbw7"
     },
     "cybersecurity-foundations": {
         "title": "Cybersecurity Foundations",
@@ -97,7 +123,7 @@ COURSES = {
         "description": "Introduction to cybersecurity principles, threats, and defense mechanisms.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT 312 Cybersecurity",
-        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgDuJxwBOzdVQLmc7F2ik_8qAWfFsr_rPVC-jzyRsPTMBQc?e=DcBF87"
+        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgDuJxwBOzdVQLmc7F2ik_8qAWfFsr_rPVC-jzyRsPTMBQc?e=OsI0Ff"
     },
     "business-intelligence": {
         "title": "Business Intelligence Systems",
@@ -105,7 +131,7 @@ COURSES = {
         "description": "Learn to work with BI tools, data analytics, and business intelligence platforms.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT 340 Business Intelligence Systems",
-        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgBx73_z5374T4NCwCjIfDUbAV1AqkiURxqSgcuv2UVjkos?e=1i0DKB"
+        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgBx73_z5374T4NCwCjIfDUbAV1AqkiURxqSgcuv2UVjkos?e=xmr6me"
     },
     "advanced-linux": {
         "title": "Advanced Linux",
@@ -113,7 +139,14 @@ COURSES = {
         "description": "Advanced Linux system administration, scripting, and performance tuning.",
         "url": "https://www.byupathway.edu",
         "local_folder": "IT 370 Advanced Linux",
-        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgBbUVpk1e3tRYhHHvJlM3C1AUYMZLzHptx1ATb5wmqtqeY?e=SxJZ7a"
+        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgBbUVpk1e3tRYhHHvJlM3C1AUYMZLzHptx1ATb5wmqtqeY?e=3IB9pF"
+    },
+    "byu-general": {
+        "title": "BYU Pathway Worldwide",
+        "certificate": "Information Technology",
+        "description": "General BYU Pathway resources and materials.",
+        "url": "https://www.byupathway.edu",
+        "onedrive_link": "https://byupathwayworldwideprod-my.sharepoint.com/:f:/g/personal/smokhele_byupathway_edu/IgBq0IqXUsPcTrfkxRDZRe0uAVDhFqPp4bKTZSy2WbbZuxA?e=7eoeWT"
     },
     "scripting-security": {
         "title": "Scripting for Security Operations",
@@ -181,7 +214,83 @@ def timeline():
 def contact():
     return render_template('contact.html')
 
-# ---------------- COURSE DETAILS ----------------
+# -------- FILE VIEWING API (VIEW-ONLY) --------
+@app.route('/api/file-content', methods=['POST'])
+def get_file_content():
+    """Serve file content for viewing (view-only, no edit/delete)"""
+    try:
+        file_path = request.json.get('path')
+        
+        if not file_path:
+            return jsonify({'error': 'No file path provided'}), 400
+        
+        # Security check: verify path is within allowed directories
+        if not is_safe_path(file_path, ALLOWED_PATHS):
+            return jsonify({'error': 'Access denied to this file'}), 403
+        
+        if not os.path.exists(file_path) or not os.path.isfile(file_path):
+            return jsonify({'error': 'File not found'}), 404
+        
+        # Get file size to decide how to handle it
+        file_size = os.path.getsize(file_path)
+        mime_type, _ = mimetypes.guess_type(file_path)
+        
+        # For text files, return content
+        text_extensions = {'.txt', '.py', '.sh', '.sql', '.js', '.html', '.css', '.json', '.csv', '.xml', '.md'}
+        file_ext = os.path.splitext(file_path)[1].lower()
+        
+        if file_ext in text_extensions or (mime_type and mime_type.startswith('text/')):
+            try:
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    return jsonify({
+                        'success': True,
+                        'content': content,
+                        'filename': os.path.basename(file_path),
+                        'type': 'text',
+                        'file_ext': file_ext
+                    })
+            except Exception as e:
+                return jsonify({'error': f'Could not read file: {str(e)}'}), 500
+        
+        # For binary files, return file info and download link
+        else:
+            return jsonify({
+                'success': True,
+                'filename': os.path.basename(file_path),
+                'type': 'binary',
+                'file_ext': file_ext,
+                'size': file_size,
+                'mime_type': mime_type or 'application/octet-stream',
+                'message': f'This is a binary file. Click the download button to view/save it.'
+            })
+    
+    except Exception as e:
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+# -------- FILE DOWNLOAD API (VIEW-ONLY) --------
+@app.route('/api/file-download', methods=['POST'])
+def download_file():
+    """Download file for viewing (view-only)"""
+    try:
+        file_path = request.json.get('path')
+        
+        if not file_path:
+            return jsonify({'error': 'No file path provided'}), 400
+        
+        # Security check
+        if not is_safe_path(file_path, ALLOWED_PATHS):
+            return jsonify({'error': 'Access denied to this file'}), 403
+        
+        if not os.path.exists(file_path) or not os.path.isfile(file_path):
+            return jsonify({'error': 'File not found'}), 404
+        
+        return send_file(file_path, as_attachment=True, download_name=os.path.basename(file_path))
+    
+    except Exception as e:
+        return jsonify({'error': f'Download error: {str(e)}'}), 500
+
+# -------- COURSE DETAILS --------
 @app.route('/course/<course_id>')
 def course_detail(course_id):
     course = COURSES.get(course_id)
@@ -343,7 +452,44 @@ def projects():
                     "type": file.split('.')[-1].lower() if '.' in file else "other"
                 })
 
-    return render_template("projects.html", courses=courses, recordings_by_course=recordings_by_course)
+    # Generate project links from COURSES with onedrive_link
+    project_links = []
+    for course_id, course in COURSES.items():
+        if course.get('onedrive_link'):
+            project_links.append({
+                "title": course.get('title'),
+                "certificate": course.get('certificate'),
+                "description": course.get('description'),
+                "url": course.get('onedrive_link'),
+                "display": course.get('local_folder', course.get('title'))
+            })
+
+    # Add OneDrive recordings link as a top-level recordings entry
+    if RECORDINGS_ONEDRIVE_LINK:
+        recordings_by_course.setdefault('Project Recordings', [])
+        # only add once
+        if not any(r.get('url') == RECORDINGS_ONEDRIVE_LINK for r in recordings_by_course['Project Recordings']):
+            recordings_by_course['Project Recordings'].insert(0, {
+                'name': 'All Recordings (OneDrive)',
+                'url': RECORDINGS_ONEDRIVE_LINK,
+                'type': 'folder'
+            })
+
+        # Also map the recordings link under each course title for discoverability
+        for course_id, course in COURSES.items():
+            course_title = course.get('title')
+            if not course_title:
+                continue
+            recordings = recordings_by_course.get(course_title, [])
+            if not any(r.get('url') == RECORDINGS_ONEDRIVE_LINK for r in recordings):
+                recordings.append({
+                    'name': 'Recordings (OneDrive)',
+                    'url': RECORDINGS_ONEDRIVE_LINK,
+                    'type': 'folder'
+                })
+                recordings_by_course[course_title] = recordings
+
+    return render_template("projects.html", courses=courses, recordings_by_course=recordings_by_course, project_links=project_links)
 
 
 # ---------------- RUN ----------------
