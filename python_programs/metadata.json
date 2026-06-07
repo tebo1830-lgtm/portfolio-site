@@ -5,5 +5,8 @@
   "insert_recs.py": "Users DB project: insert or update seed users into the shared people.db.",
   "show_records.py": "Users DB project: show all users from the shared people.db.",
   "users.py": "Users DB project seed data used by createDB and insert_recs.",
-  "users_db_project.py": "Grouped Users DB project: create the database, seed users, and display stored records."
+  "users_db_project.py": "Interactive Users DB project: create, seed, update, and display users in the shared database.",
+  "fertilizer_catalog.py": "Search the fertilizer catalog by type, brand, or price. Uses a seeded supplies.db.",
+  "fertilizer_editing.py": "View or update fertilizer pricing in the shared supplies.db.",
+  "tilling_the_soil.py": "Interactive fertilizer cost and coverage calculator for multiple sections."
 }
