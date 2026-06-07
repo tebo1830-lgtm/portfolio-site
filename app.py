@@ -4,6 +4,9 @@ import os
 import json
 import base64
 import mimetypes
+import subprocess
+import sys
+import shlex
 
 app = Flask(__name__)
 
@@ -490,6 +493,80 @@ def projects():
                 recordings_by_course[course_title] = recordings
 
     return render_template("projects.html", courses=courses, recordings_by_course=recordings_by_course, project_links=project_links)
+
+
+# ---------------- PYTHON PROJECTS (LOCAL + OneDrive links) ----------------
+@app.route('/python-projects')
+def python_projects():
+    # local folder inside the repo where the user will place CS104 files
+    repo_root = os.path.dirname(os.path.abspath(__file__))
+    local_folder = os.path.join(repo_root, 'python_programs')
+
+    files = []
+    if os.path.exists(local_folder) and os.path.isdir(local_folder):
+        for fname in sorted(os.listdir(local_folder)):
+            if fname.startswith('.'):
+                continue
+            fpath = os.path.join(local_folder, fname)
+            if os.path.isfile(fpath) and fname.lower().endswith('.py'):
+                files.append({
+                    'name': fname,
+                    'path': fpath
+                })
+
+    # OneDrive links provided (hybrid approach) - user-supplied folders
+    onedrive_links = [
+        { 'title': '1-4 Integrated Development Environments', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '2-4 First Programs', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '2-5 Putting Python to Work', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '2-7 Flow of Information', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '3-4 Tilling Soil', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '3-5 Limiting Access', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '4-4 The Nature of Numbers', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '4-6 Iterating Through a JSON Object', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '4-7 Raspberry Pi Python Execution', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '5-3 Tracking Finances', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '5-4 Career Connections', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '5-7 Security Device Monitoring', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '6-4 Creating and Filling a Database', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '6-8 Connecting with the WhatsApp API', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '7-2 Flask Routing Quiz', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'},
+        { 'title': '7-3 Reading and Revising an API', 'url': 'https://byupathwayworldwideprod-my.sharepoint.com/personal/smokhele_byupathway_edu/Documents/'}
+    ]
+
+    return render_template('python_projects.html', files=files, onedrive_links=onedrive_links)
+
+
+@app.route('/api/run-python', methods=['POST'])
+def run_python():
+    data = request.json or {}
+    filename = data.get('filename')
+    if not filename:
+        return jsonify({'error': 'No filename provided'}), 400
+
+    repo_root = os.path.dirname(os.path.abspath(__file__))
+    local_folder = os.path.join(repo_root, 'python_programs')
+    target_path = os.path.join(local_folder, os.path.basename(filename))
+
+    # Security: ensure the path is inside local_folder
+    if not is_safe_path(target_path, [local_folder]):
+        return jsonify({'error': 'Access denied'}), 403
+
+    if not os.path.exists(target_path) or not os.path.isfile(target_path):
+        return jsonify({'error': 'File not found'}), 404
+
+    # Run with the same Python interpreter used by the server
+    cmd = [sys.executable, target_path]
+
+    try:
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=8, cwd=local_folder, text=True)
+        stdout = proc.stdout[:10000]
+        stderr = proc.stderr[:10000]
+        return jsonify({'success': True, 'stdout': stdout, 'stderr': stderr, 'returncode': proc.returncode})
+    except subprocess.TimeoutExpired:
+        return jsonify({'error': 'Execution timed out'}), 504
+    except Exception as e:
+        return jsonify({'error': f'Execution error: {str(e)}'}), 500
 
 
 # ---------------- RUN ----------------

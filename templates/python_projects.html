@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+  <h1>Python Projects (CS104)</h1>
+  <p>Place CS104 Python files in the <strong>python_programs/</strong> folder. Click <strong>Run</strong> to execute them on the server (read-only sandbox with limited timeout).</p>
+
+  <h2>Local Programs</h2>
+  {% if files %}
+    <ul>
+      {% for f in files %}
+      <li>
+        <strong>{{ f.name }}</strong>
+        <button class="run-btn" data-fname="{{ f.name }}">Run</button>
+        <pre class="output" id="out-{{ loop.index0 }}" style="background:#111;color:#dff;padding:10px;display:none;white-space:pre-wrap;"></pre>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No local Python files found in <code>python_programs/</code>. Add them and refresh.</p>
+  {% endif %}
+
+  <h2>OneDrive Sources</h2>
+  <ul>
+    {% for link in onedrive_links %}
+      <li><a href="{{ link.url }}" target="_blank">{{ link.title }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+
+<script>
+document.addEventListener('click', async (e) => {
+  if (e.target.classList.contains('run-btn')) {
+    const fname = e.target.dataset.fname;
+    const li = e.target.closest('li');
+    const out = li.querySelector('.output');
+    out.style.display = 'block';
+    out.textContent = 'Running...';
+
+    try {
+      const res = await fetch('/api/run-python', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: fname })
+      });
+      const data = await res.json();
+      if (data.success) {
+        out.textContent = '';
+        if (data.stdout) out.textContent += data.stdout + '\n';
+        if (data.stderr) out.textContent += '\n--- STDERR ---\n' + data.stderr;
+        out.textContent += '\n\nReturn code: ' + data.returncode;
+      } else if (data.error) {
+        out.textContent = 'Error: ' + data.error;
+      } else {
+        out.textContent = JSON.stringify(data, null, 2);
+      }
+    } catch (err) {
+      out.textContent = 'Request failed: ' + err;
+    }
+  }
+});
+</script>
+
+{% endblock %}
