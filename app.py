@@ -501,6 +501,15 @@ def python_projects():
     # local folder inside the repo where the user will place CS104 files
     repo_root = os.path.dirname(os.path.abspath(__file__))
     local_folder = os.path.join(repo_root, 'python_programs')
+    metadata_path = os.path.join(local_folder, 'metadata.json')
+
+    metadata = {}
+    if os.path.exists(metadata_path) and os.path.isfile(metadata_path):
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as meta_file:
+                metadata = json.load(meta_file)
+        except Exception:
+            metadata = {}
 
     files = []
     if os.path.exists(local_folder) and os.path.isdir(local_folder):
@@ -514,6 +523,7 @@ def python_projects():
                 files.append({
                     'name': fname,
                     'display_name': clean_display,
+                    'description': metadata.get(fname, ''),
                     'path': fpath
                 })
 
@@ -538,6 +548,38 @@ def python_projects():
     ]
 
     return render_template('python_projects.html', files=files, onedrive_links=onedrive_links)
+
+
+@app.route('/api/python-projects/files', methods=['GET'])
+def python_projects_files():
+    repo_root = os.path.dirname(os.path.abspath(__file__))
+    local_folder = os.path.join(repo_root, 'python_programs')
+    metadata_path = os.path.join(local_folder, 'metadata.json')
+
+    metadata = {}
+    if os.path.exists(metadata_path) and os.path.isfile(metadata_path):
+        try:
+            with open(metadata_path, 'r', encoding='utf-8') as meta_file:
+                metadata = json.load(meta_file)
+        except Exception:
+            metadata = {}
+
+    files = []
+    if os.path.exists(local_folder) and os.path.isdir(local_folder):
+        for fname in sorted(os.listdir(local_folder)):
+            if fname.startswith('.'):
+                continue
+            fpath = os.path.join(local_folder, fname)
+            if os.path.isfile(fpath) and fname.lower().endswith('.py'):
+                clean_name = os.path.splitext(fname)[0]
+                clean_display = clean_name.replace('_', ' ').replace('-', ' ').title()
+                files.append({
+                    'name': fname,
+                    'display_name': clean_display,
+                    'description': metadata.get(fname, ''),
+                })
+
+    return jsonify({'files': files})
 
 
 @app.route('/api/run-python', methods=['POST'])

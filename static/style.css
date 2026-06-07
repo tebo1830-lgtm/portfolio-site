@@ -75,6 +75,27 @@ nav a { color:white; margin:10px; text-decoration:none; }
     color: #64748b;
     font-size: 0.95rem;
 }
+.python-projects-page .project-list-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.python-projects-page .refresh-btn {
+    border: 1px solid #3b82f6;
+    background: #ffffff;
+    color: #1d4ed8;
+    padding: 12px 18px;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+.python-projects-page .refresh-btn:hover {
+    background: #eff6ff;
+    transform: translateY(-1px);
+}
 .python-projects-page .run-btn {
     background: #2563eb;
     border: none;
@@ -88,6 +109,11 @@ nav a { color:white; margin:10px; text-decoration:none; }
 .python-projects-page .run-btn:hover {
     background: #1d4ed8;
     transform: translateY(-1px);
+}
+.python-projects-page .project-description {
+    margin: 0 0 14px;
+    color: #334155;
+    line-height: 1.6;
 }
 .python-projects-page .output-box {
     background: #0f172a;
