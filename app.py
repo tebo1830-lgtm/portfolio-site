@@ -179,11 +179,11 @@ CERTIFICATE_TRACKS = [
         "status": "Completed",
         "detail": "All 5 courses completed",
         "courses": [
-            {"id": "pc-hardware", "note": "Completed"},
-            {"id": "networking-fundamentals", "note": "Completed"},
-            {"id": "cloud-server", "note": "Completed"},
-            {"id": "intro-it", "note": "Completed"},
-            {"id": "applied-programming", "note": "Completed"}
+            {"id": "pc-hardware", "note": "Completed", "grade": "A"},
+            {"id": "networking-fundamentals", "note": "Completed", "grade": "C"},
+            {"id": "cloud-server", "note": "Completed", "grade": "A"},
+            {"id": "intro-it", "note": "Completed", "grade": "A"},
+            {"id": "applied-programming", "note": "Completed", "grade": "A"}
         ]
     },
     {
@@ -193,11 +193,11 @@ CERTIFICATE_TRACKS = [
         "status": "In Progress",
         "detail": "4 of 5 courses complete",
         "courses": [
-            {"id": "database-design", "note": "Completed"},
-            {"id": "linux-fundamentals", "note": "Completed"},
-            {"id": "cloud-computing", "note": "Completed"},
-            {"id": "network-config", "note": "Completed"},
-            {"id": "cybersecurity-foundations", "note": "In Progress"}
+            {"id": "database-design", "note": "Completed", "grade": "B+"},
+            {"id": "linux-fundamentals", "note": "Completed", "grade": "B+"},
+            {"id": "cloud-computing", "note": "Completed", "grade": "B+"},
+            {"id": "network-config", "note": "Completed", "grade": "A"},
+            {"id": "cybersecurity-foundations", "note": "In Progress", "grade": ""}
         ]
     },
     {
@@ -207,11 +207,11 @@ CERTIFICATE_TRACKS = [
         "status": "In Progress",
         "detail": "2 of 5 courses in progress",
         "courses": [
-            {"id": "business-intelligence", "note": "In Progress"},
-            {"id": "advanced-linux", "note": "In Progress"},
-            {"id": "scripting-security", "note": "Planned"},
-            {"id": "azure-tech", "note": "Planned"},
-            {"id": "aws-practitioner", "note": "Planned"}
+            {"id": "business-intelligence", "note": "In Progress", "grade": "A"},
+            {"id": "advanced-linux", "note": "In Progress", "grade": "A"},
+            {"id": "scripting-security", "note": "Planned", "grade": ""},
+            {"id": "azure-tech", "note": "Planned", "grade": ""},
+            {"id": "aws-practitioner", "note": "Planned", "grade": ""}
         ]
     }
 ]
@@ -246,6 +246,21 @@ def cloud():
 def cybersecurity():
     return render_template('cybersecurity.html')
 
+def find_certificate_file(certificate):
+    static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+    candidates = [
+        f"{certificate['id']}.pdf",
+        f"{certificate['title'].replace(' ', '_')}.pdf",
+        f"{certificate['title'].replace(' ', '_').replace('-', '_')}.pdf",
+        f"{certificate['title'].replace(' ', '_').replace('&', 'and')}.pdf"
+    ]
+    for candidate in candidates:
+        candidate_path = os.path.join(static_folder, candidate)
+        if os.path.exists(candidate_path):
+            return url_for('static', filename=candidate)
+    return None
+
+
 @app.route('/certifications')
 def certifications():
     certificates = []
@@ -254,7 +269,7 @@ def certifications():
         completed = 0
         for item in cert['courses']:
             course = COURSES.get(item['id'], {})
-            title = course.get('title', item['id'].replace('-', ' ').title())
+            title = course.get('title', item['id'].replace('-', ' ').replace('_', ' ').title())
             url = url_for('course_detail', course_id=item['id']) if item['id'] in COURSES else None
             note = item['note']
             if note == 'Completed':
@@ -263,7 +278,8 @@ def certifications():
                 'id': item['id'],
                 'title': title,
                 'url': url,
-                'note': note
+                'note': note,
+                'grade': item.get('grade', '')
             })
 
         certificates.append({
@@ -274,7 +290,8 @@ def certifications():
             'detail': cert['detail'],
             'courses': courses,
             'completed': completed,
-            'total': len(courses)
+            'total': len(courses),
+            'certificate_file': find_certificate_file(cert)
         })
 
     return render_template('certifications.html', certificates=certificates)

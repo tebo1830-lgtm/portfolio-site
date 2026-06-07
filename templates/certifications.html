@@ -16,8 +16,15 @@
   {% for cert in certificates %}
     <section class="certificate-panel{% if not loop.first %} hidden{% endif %}" id="{{ cert.id }}">
       <div class="card">
-        <h2>{{ cert.title }}</h2>
-        <p>{{ cert.summary }}</p>
+        <div class="cert-header">
+          <div>
+            <h2>{{ cert.title }}</h2>
+            {% if cert.certificate_file %}
+              <a href="{{ cert.certificate_file }}" target="_blank" class="btn cert-file-btn">Download Certificate</a>
+            {% endif %}
+          </div>
+          <p>{{ cert.summary }}</p>
+        </div>
         <p class="status">{{ cert.detail }}</p>
         <div class="certificate-summary">
           <span class="certificate-status {{ cert.status|lower|replace(' ', '-') }}">{{ cert.status }}</span>
@@ -30,12 +37,16 @@
         <ul class="certificate-course-list">
           {% for course in cert.courses %}
             <li class="course-item {{ course.note|lower|replace(' ', '-') }}">
-              {% if course.url %}
-                <a href="{{ course.url }}">{{ course.title }}</a>
-              {% else %}
-                {{ course.title }}
-              {% endif %}
-              <span class="course-status">{{ course.note }}</span>
+              <div>
+                {% if course.url %}
+                  <a href="{{ course.url }}">{{ course.title }}</a>
+                {% else %}
+                  {{ course.title }}
+                {% endif %}
+              </div>
+              <span class="course-status {{ course.note|lower|replace(' ', '-') }}">
+                {{ course.note }}{% if course.grade %} • {{ course.grade }}{% endif %}
+              </span>
             </li>
           {% endfor %}
         </ul>

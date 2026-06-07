@@ -598,6 +598,37 @@ tr th {
     background: #e2e8f0;
 }
 
+.course-status.completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.course-status.in-progress {
+    background: #dbeafe;
+    color: #1e3a8a;
+}
+
+.course-status.planned {
+    background: #f8fafc;
+    color: #475569;
+}
+
+.cert-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cert-header .btn.cert-file-btn {
+    margin-top: 0;
+    background: #14b8a6;
+    border-color: transparent;
+}
+
+.cert-header .btn.cert-file-btn:hover {
+    background: #0f766e;
+}
+
 .callout-card {
     border-left: 4px solid #2563eb;
 }
