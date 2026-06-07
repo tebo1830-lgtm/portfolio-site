@@ -1,8 +1,0 @@
-
-# This is a CODEOWNERS file.
-# Lines starting with '#' are comments.
-# The format is:
-# <pattern> <owner(s)>
-
-# Assign @scmurdock as the maintainer for all files in the repository
-* @scmurdock
