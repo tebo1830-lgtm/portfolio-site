@@ -1,20 +1,7 @@
-# TO-DO Calculate gross pay
-wage = float(input("What is your hourly wage? "))
-hours = float(input("How many hours did you work? "))
-gross = wage * hours
-print(f"Gross Pay: ${gross:.2f} ({hours} hours @ ${wage:.2f}/hr)")
-# TO-DO Calculate withholding
-federal = gross * 0.10
-state = gross * 0.05
-social = gross * 0.062
-
-print(f"Federal tax: ${federal:.2f}")
-print(f"State tax: ${state:.2f}")
-print(f"Social security: ${social:.2f}")
-# TO-DO Calculate net pay
-net = gross - (federal + state + social)
-print(f"Net pay: ${net:.2f}")
 # TO-DO Create your menu and program
+import sys
+
+
 def main():
     transactions = []
 
@@ -67,3 +54,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    

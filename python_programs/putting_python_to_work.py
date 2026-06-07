@@ -1,15 +1,21 @@
-# Ask the user for the radius of the circle
-radius = float(input("What is the radius of the circle? "))
+import sys
+import math
 
-# Calculate the diameter
-diameter = 2 * radius
 
-# Calculate circumference
-circumference = 2 * 3.14 * radius
+def main():
+    try:
+        radius = float(input("What is the radius of the circle? "))
+    except (ValueError, EOFError, KeyboardInterrupt):
+        print('\nInvalid input or input cancelled. Exiting.')
+        sys.exit(0)
 
-# Calculate area
-area = 3.14 * (radius ** 2)
+    diameter = 2 * radius
+    circumference = 2 * math.pi * radius
+    area = math.pi * (radius ** 2)
 
-# Display the results
-print(f"A circle with a radius of {radius} units will have a diameter of {diameter} units, "
-    f"a circumference of {circumference} units, and an area of {area} square units.")
+    print(f"A circle with a radius of {radius} units will have a diameter of {diameter} units, "
+          f"a circumference of {circumference} units, and an area of {area} square units.")
+
+
+if __name__ == '__main__':
+    main()
