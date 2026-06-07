@@ -1,7 +1,13 @@
 import sqlite3
+import os
+
+
+def db_path():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'people.db')
+
 
 def main():
-    conn = sqlite3.connect('people.db')
+    conn = sqlite3.connect(db_path())
     cursor = conn.cursor()
 
     # Check if the table already exists
