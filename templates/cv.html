@@ -1,16 +1,301 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="card">
-<h1>Professional Experience</h1>
-<ul>
-<li>K8 Technical Lead – Klipboard</li>
-<li>Helpdesk Analyst – Keyloop</li>
-<li>Support Manager – Keyloop</li>
-</ul>
-<br>
-<a href="{{ url_for('static', filename='Sifiso_Mokhele_CV.pdf') }}" download class="btn">
-📄 Download My CV</a>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* HERO */
+.hero {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px;
+  background: linear-gradient(135deg, #020617, #0a66c2);
+  color: #e2e8f0;
+  margin-top: -20px;
+}
+
+.hero-content {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  max-width: 1200px;
+}
+
+.hero-text h1 {
+  font-size: 3em;
+  margin-bottom: 15px;
+}
+
+.hero-text p {
+  font-size: 1.3em;
+  margin: 10px 0;
+}
+
+.hero-image img {
+  width: 250px;
+  height: 250px;
+  border-radius: 15px;
+  object-fit: cover;
+  border: 4px solid #38bdf8;
+  box-shadow: 0 8px 32px rgba(56, 189, 248, 0.3);
+}
+
+.btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 12px 20px;
+  background: #38bdf8;
+  color: black;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  background: white;
+  transform: translateY(-2px);
+}
+
+/* SECTIONS */
+section {
+  padding: 80px 20px;
+  max-width: 1000px;
+  margin: auto;
+  color: #e2e8f0;
+}
+
+h2 {
+  margin-bottom: 20px;
+  border-left: 5px solid #38bdf8;
+  padding-left: 10px;
+  font-size: 2em;
+}
+
+h3 {
+  margin: 15px 0 5px 0;
+}
+
+/* SKILLS */
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.skills span {
+  display: inline-block;
+  background: #1e293b;
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: 1px solid #38bdf8;
+  font-size: 0.95em;
+}
+
+/* EXPERIENCE */
+.job {
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.job:last-child {
+  border-bottom: none;
+}
+
+.job h3 {
+  color: #38bdf8;
+}
+
+.job p {
+  color: #94a3b8;
+  font-size: 0.9em;
+}
+
+/* PROJECTS */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.project {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #38bdf8;
+  transition: transform 0.3s ease;
+}
+
+.project:hover {
+  transform: translateY(-5px);
+}
+
+.project h3 {
+  color: #38bdf8;
+  margin-bottom: 10px;
+}
+
+/* CONTACT */
+.contact-info p {
+  margin: 10px 0;
+  font-size: 1.1em;
+}
+
+.contact-info a {
+  color: #38bdf8;
+  text-decoration: none;
+}
+
+.contact-info a:hover {
+  text-decoration: underline;
+}
+
+/* RESPONSIVE */
+@media(max-width: 768px) {
+  .hero { 
+    padding: 40px 20px; 
+    margin-top: 0;
+  }
+  
+  .hero-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .hero-text h1 { 
+    font-size: 2em; 
+  }
+  
+  .hero-text p {
+    font-size: 1.1em;
+  }
+  
+  .hero-image img {
+    width: 200px;
+    height: 200px;
+  }
+  
+  section {
+    padding: 40px 20px;
+  }
+  
+  h2 {
+    font-size: 1.5em;
+  }
+}
+
+</style>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-text">
+      <h1>Hi, I'm Sifiso 👋</h1>
+      <p>IT Support & Systems Professional</p>
+      <p>18+ Years Experience | Cloud | Networking | Support Leadership</p>
+      <a href="{{ url_for('static', filename='Sifiso_Mokhele_CV.pdf') }}" download class="btn">
+        📄 Download My CV
+      </a>
+    </div>
+    <div class="hero-image">
+      <img src="{{ url_for('static', filename='images/Sifiso.jpeg') }}" alt="Sifiso Mokhele">
+    </div>
+  </div>
 </div>
+
+<!-- ABOUT -->
+<section id="about">
+  <h2>About Me</h2>
+  <p>
+    IT Support and Systems Professional with over 18 years of experience across
+    enterprise support, ERP systems, and service delivery leadership. Currently
+    pursuing a Bachelor of Applied Science in IT. Passionate about solving complex
+    technical problems, improving systems, and supporting business operations.
+  </p>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <h2>Skills</h2>
+  <div class="skills">
+    <span>Technical Support</span>
+    <span>Networking (TCP/IP, OSI)</span>
+    <span>Windows Admin</span>
+    <span>Cloud Computing</span>
+    <span>Cybersecurity</span>
+    <span>Python</span>
+    <span>ERP Systems</span>
+    <span>Leadership</span>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <h2>Experience</h2>
+
+  <div class="job">
+    <h3>K8 Technical Lead – Klipboard</h3>
+    <p>Feb 2025 – May 2025</p>
+  </div>
+
+  <div class="job">
+    <h3>TSA Helpdesk Support Analyst – Keyloop</h3>
+    <p>2024</p>
+  </div>
+
+  <div class="job">
+    <h3>Helpdesk Support Manager – Keyloop</h3>
+    <p>2020 – 2023</p>
+  </div>
+
+  <div class="job">
+    <h3>CRM Support Analyst – Keyloop</h3>
+    <p>2007 – 2020</p>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <h2>Projects</h2>
+  <div class="projects-grid">
+    <div class="project">
+      <h3>💻 Network Lab Setup</h3>
+      <p>Designed and configured a simulated enterprise network with subnetting and routing.</p>
+    </div>
+
+    <div class="project">
+      <h3>☁ Cloud Environment</h3>
+      <p>Built cloud-based infrastructure and deployed services for testing applications.</p>
+    </div>
+
+    <div class="project">
+      <h3>🔐 Cybersecurity Lab</h3>
+      <p>Implemented security controls, monitoring, and basic threat detection techniques.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <h2>Contact</h2>
+  <div class="contact-info">
+    <p><strong>Email:</strong> smokhele@byupathway.edu</p>
+    <p><strong>Phone:</strong> 064 937 3653</p>
+    <p>
+      <strong>LinkedIn:</strong>
+      <a href="https://www.linkedin.com/in/sifiso-mokhele-ba176b1b/" target="_blank">
+        View Profile
+      </a>
+    </p>
+  </div>
+</section>
 
 {% endblock %}
